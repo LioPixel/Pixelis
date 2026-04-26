@@ -38,6 +38,9 @@ public static class NetworkManager
     // Connection callbacks
     private static Action? _onConnectionSuccess;
     private static Action<string>? _onConnectionFailed;
+    public static event Action<string>? ChatMessageReceived;
+    public static event Action? ChatClearedReceived;
+    private static bool _chatInputBlocked;
 
     public static void Update()
     {
@@ -46,15 +49,30 @@ public static class NetworkManager
         Client?.Update();
     }
 
-    public static void CreateServer(ushort slots, string levelName, string hostUsername)
+    public static bool CreateServer(ushort slots, string levelName, string hostUsername, out string errorMessage)
     {
+        errorMessage = string.Empty;
         _currentLevel = levelName;
         
         // Store the host username so it can be used when the host client connects
         _pendingUsername = hostUsername;
-        
-        Server = new Server();
-        Server.Start(7777, slots);
+
+        try
+        {
+            Server = new Server();
+            Server.Start(7777, slots);
+        }
+        catch (Exception ex)
+        {
+            Logger.Error($"[SERVER] Failed to start server: {ex.Message}");
+
+            Client = null;
+            Server = null;
+            errorMessage = ex is System.Net.Sockets.SocketException
+                ? "Port 7777 ist bereits belegt. Schliesse die andere Instanz zuerst."
+                : "Server konnte nicht gestartet werden.";
+            return false;
+        }
         
         // Register server-side message handlers
         Server.MessageReceived += HandleServerMessageReceived;
@@ -124,6 +142,7 @@ public static class NetworkManager
         Client.MessageReceived += HandleClientMessageReceived;
         Client.Connect("127.0.0.1:7777");
         Logger.Info($"[CLIENT] Host connecting to own server with username: {hostUsername}");
+        return true;
     }
     
     // Helper method to convert level name to int
@@ -175,7 +194,39 @@ public static class NetworkManager
             case 8: // Username from client
                 HandleClientUsernameMessage(e.Message, e.FromConnection.Id);
                 break;
+            case 9: // Chat message from client
+                HandleClientChatMessage(e.Message, e.FromConnection.Id);
+                break;
+            case 10: // Clear chat command from host
+                HandleServerClearChat(e.FromConnection.Id);
+                break;
         }
+    }
+
+    private static void HandleClientChatMessage(Message message, ushort fromClientId)
+    {
+        string chatText = message.GetString();
+        string username = PlayerUsernames.TryGetValue(fromClientId, out string? name) ? name : $"Player {fromClientId}";
+        string fullMessage = $"{username}: {chatText}";
+
+        Logger.Info($"[SERVER] Chat from {fromClientId}: {chatText}");
+
+        Message broadcastMessage = Message.Create(MessageSendMode.Reliable, 9);
+        broadcastMessage.AddString(fullMessage);
+        Server?.SendToAll(broadcastMessage);
+    }
+
+    private static void HandleServerClearChat(ushort fromClientId)
+    {
+        if (Server == null || !Server.IsRunning || fromClientId != LocalPlayerId)
+        {
+            return;
+        }
+
+        Logger.Info("[SERVER] Host requested chat clear");
+
+        Message clearMessage = Message.Create(MessageSendMode.Reliable, 10);
+        Server.SendToAll(clearMessage);
     }
     
     // Handle username message from client
@@ -276,6 +327,12 @@ public static class NetworkManager
                 break;
             case 7: // Level transition
                 HandleLevelTransition(e.Message);
+                break;
+            case 9: // Chat message
+                HandleChatMessage(e.Message);
+                break;
+            case 10: // Clear chat
+                HandleClearChat();
                 break;
             default:
                 Logger.Warn($"[CLIENT] Unknown message ID: {messageId}");
@@ -764,6 +821,17 @@ public static class NetworkManager
             Logger.Warn($"[DESPAWN] Player {playerId} not found in NetworkedPlayers dictionary");
         }
     }
+
+    private static void HandleChatMessage(Message message)
+    {
+        string chatText = message.GetString();
+        ChatMessageReceived?.Invoke(chatText);
+    }
+
+    private static void HandleClearChat()
+    {
+        ChatClearedReceived?.Invoke();
+    }
     
     // Send player position update
     public static void SendPlayerPosition(Vector3 position, PlayerPoseType poseType)
@@ -791,5 +859,71 @@ public static class NetworkManager
             message.AddString(nextLevel);
             Client.Send(message);
         }
+    }
+
+    public static void SubmitChatInput(string input)
+    {
+        if (string.IsNullOrWhiteSpace(input))
+        {
+            return;
+        }
+
+        if (string.Equals(input.Trim(), "/clear", StringComparison.OrdinalIgnoreCase))
+        {
+            if (Server != null && Server.IsRunning)
+            {
+                if (Client != null && Client.IsConnected)
+                {
+                    Message message = Message.Create(MessageSendMode.Reliable, 10);
+                    Client.Send(message);
+                }
+                else
+                {
+                    ChatClearedReceived?.Invoke();
+                }
+            }
+            else
+            {
+                ChatMessageReceived?.Invoke("Error: Only the host can execute this command.");
+            }
+            return;
+        }
+
+        if (Client != null && Client.IsConnected)
+        {
+            Message message = Message.Create(MessageSendMode.Reliable, 9);
+            message.AddString(input);
+            Client.Send(message);
+        }
+        else
+        {
+            string username = ResolveLocalUsername();
+            ChatMessageReceived?.Invoke($"{username}: {input}");
+        }
+    }
+
+    public static void SetChatInputBlocked(bool blocked)
+    {
+        _chatInputBlocked = blocked;
+    }
+
+    public static bool IsChatInputBlocked()
+    {
+        return _chatInputBlocked;
+    }
+
+    private static string ResolveLocalUsername()
+    {
+        if (PlayerUsernames.TryGetValue(LocalPlayerId, out string? username) && !string.IsNullOrWhiteSpace(username))
+        {
+            return username;
+        }
+
+        if (!string.IsNullOrWhiteSpace(_pendingUsername))
+        {
+            return _pendingUsername;
+        }
+
+        return "Local";
     }
 }

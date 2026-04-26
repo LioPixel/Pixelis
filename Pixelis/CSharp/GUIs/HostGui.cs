@@ -18,6 +18,9 @@ namespace Pixelis.CSharp.GUIs;
 
 public class HostGui : Gui
 {
+    private string _errorMessage = "";
+    private float _errorDisplayTime = 0f;
+
     public HostGui () : base("Host", null) { }
 
     protected override void Init()
@@ -132,6 +135,9 @@ public class HostGui : Gui
         this.AddElement("Name-Text-Box", new TextureTextBoxElement(nameTextBoxData, nameTextBoxLabelData, nameHintTextBoxLabelData, Anchor.Center, new Vector2(120, -120), 15, TextAlignment.Center, new Vector2(0, 1), (12, 12), new Vector2(230, 30), rotation: 0, clickFunc: (element) => {
             return true;
         }));
+
+        LabelData errorLabelData = new LabelData(ContentRegistry.Fontoe, "", 18, color: Color.Red);
+        this.AddElement("Error-Label", new LabelElement(errorLabelData, Anchor.Center, new Vector2(0, 110), new Vector2(1, 1)));
         
         // Host button.
         TextureButtonData createButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
@@ -150,10 +156,20 @@ public class HostGui : Gui
                 {
                     username = "Player";
                 }
-                
-                NetworkManager.CreateServer((ushort) slideBar.Value, dropDownElement.SelectedOption?.Text ?? "Level 1", username);
-                GuiManager.SetGui(null);
-                Logger.Info("SERVER STARTED!!!!");
+
+                if (NetworkManager.CreateServer((ushort) slideBar.Value, dropDownElement.SelectedOption?.Text ?? "Level 1", username, out string errorMessage))
+                {
+                    _errorMessage = "";
+                    UpdateErrorLabel();
+                    GuiManager.SetGui(null);
+                    Logger.Info("SERVER STARTED!!!!");
+                }
+                else
+                {
+                    _errorMessage = errorMessage;
+                    _errorDisplayTime = 5f;
+                    UpdateErrorLabel();
+                }
             }
             
             return true;
@@ -163,6 +179,16 @@ public class HostGui : Gui
     protected override void Update(double delta)
     {
         base.Update(delta);
+
+        if (_errorDisplayTime > 0)
+        {
+            _errorDisplayTime -= (float)delta;
+            if (_errorDisplayTime <= 0)
+            {
+                _errorMessage = "";
+                UpdateErrorLabel();
+            }
+        }
 
         GuiElement? slotValueElement = this.GetElement("slot-value");
         GuiElement? slideBarElement = this.GetElement("Texture-Slider-Bar");
@@ -186,6 +212,15 @@ public class HostGui : Gui
             {
                 GuiManager.SetGui(new PauseMenuGui());
             }
+        }
+    }
+
+    private void UpdateErrorLabel()
+    {
+        LabelElement errorLabel = (LabelElement)this.GetElement("Error-Label");
+        if (errorLabel != null)
+        {
+            errorLabel.Data.Text = _errorMessage;
         }
     }
     

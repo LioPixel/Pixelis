@@ -295,106 +295,118 @@ public class Player : Entity
 
         if (GuiManager.ActiveGui == null)
         {
-            float groundAccel = 3f;
-            float airAccel    = 0.5f;
-            float maxSpeed    = GetMaxSpeed();   // ← Item-Effekt
-            float jumpForce   = BaseJumpForce;
-
-            bool emitParticles = false;
-
-            float input = 0f;
-            if ((Input.IsKeyDown(KeyboardKey.A) || Input.IsKeyDown(KeyboardKey.Left)) && !isLeftWallCol)
+            if (!NetworkManager.IsChatInputBlocked())
             {
-                input -= 1f;
-                if (!_isJumping && isGround)
+                float groundAccel = 3f;
+                float airAccel    = 0.5f;
+                float maxSpeed    = GetMaxSpeed();
+                float jumpForce   = BaseJumpForce;
+
+                bool emitParticles = false;
+
+                float input = 0f;
+                if ((Input.IsKeyDown(KeyboardKey.A) || Input.IsKeyDown(KeyboardKey.Left)) && !isLeftWallCol)
                 {
-                    this._frameTime = 0.1F;
-                    this.PoseType = PlayerPoseType.LeftWalk;
-                    this.GetComponent<ParticleSystem2D>()?.Definition.Direction = new Vector2(1, 0.15F);
-                    emitParticles = true;
+                    input -= 1f;
+                    if (!_isJumping && isGround)
+                    {
+                        this._frameTime = 0.1F;
+                        this.PoseType = PlayerPoseType.LeftWalk;
+                        this.GetComponent<ParticleSystem2D>()?.Definition.Direction = new Vector2(1, 0.15F);
+                        emitParticles = true;
+                    }
                 }
-            }
 
-            if ((Input.IsKeyDown(KeyboardKey.D) || Input.IsKeyDown(KeyboardKey.Right)) && !isRightWallCol)
-            {
-                input += 1f;
-                if (!_isJumping && isGround)
+                if ((Input.IsKeyDown(KeyboardKey.D) || Input.IsKeyDown(KeyboardKey.Right)) && !isRightWallCol)
                 {
-                    this._frameTime = 0.1F;
-                    this.PoseType = PlayerPoseType.RightWalk;
-                    this.GetComponent<ParticleSystem2D>()?.Definition.Direction = new Vector2(-1, 0.15F);
-                    emitParticles = true;
+                    input += 1f;
+                    if (!_isJumping && isGround)
+                    {
+                        this._frameTime = 0.1F;
+                        this.PoseType = PlayerPoseType.RightWalk;
+                        this.GetComponent<ParticleSystem2D>()?.Definition.Direction = new Vector2(-1, 0.15F);
+                        emitParticles = true;
+                    }
                 }
-            }
 
-            if (emitParticles)
-            {
-                this.GetComponent<ParticleSystem2D>()?.Definition.EmissionRate = 28;
-                this.GetComponent<ParticleSystem2D>()?.Definition.Looping = true;
+                if (emitParticles)
+                {
+                    this.GetComponent<ParticleSystem2D>()?.Definition.EmissionRate = 28;
+                    this.GetComponent<ParticleSystem2D>()?.Definition.Looping = true;
+                }
+                else
+                {
+                    this.GetComponent<ParticleSystem2D>()?.Definition.EmissionRate = 0;
+                    this.GetComponent<ParticleSystem2D>()?.Definition.Looping = false;
+                }
+
+                if (!Input.IsKeyDown(KeyboardKey.D) && !Input.IsKeyDown(KeyboardKey.Right) &&
+                    !Input.IsKeyDown(KeyboardKey.A) && !Input.IsKeyDown(KeyboardKey.Left))
+                {
+                    if (!this._isJumping)
+                    {
+                        if (this.PoseType == PlayerPoseType.LeftWalk)
+                        {
+                            this._frameTime = 0.2F;
+                            this.PoseType = PlayerPoseType.LeftIdle;
+                        }
+
+                        if (this.PoseType == PlayerPoseType.RightWalk)
+                        {
+                            this._frameTime = 0.2F;
+                            this.PoseType = PlayerPoseType.RightIdle;
+                        }
+                    }
+                }
+
+                if (input != 0f)
+                {
+                    float accel = isGround ? groundAccel : airAccel;
+                    velocity.X += input * accel;
+                    velocity.X = Math.Clamp(velocity.X, -maxSpeed, maxSpeed);
+                }
+                else if (isGround)
+                {
+                    velocity.X *= 0.8f;
+                }
+
+                if ((Input.IsKeyPressed(KeyboardKey.Space)
+                     || Input.IsKeyPressed(KeyboardKey.W)
+                     || Input.IsKeyPressed(KeyboardKey.Up))
+                    && isGround && !_isJumping)
+                {
+                    velocity.Y = -jumpForce;
+
+                    if (this.PoseType == PlayerPoseType.LeftWalk || this.PoseType == PlayerPoseType.LeftIdle)
+                    {
+                        this._frameTime = 0.1F;
+                        this._timer = 0;
+                        this._frame = 0;
+                        this.PoseType = PlayerPoseType.JumpLeft;
+                    }
+
+                    if (this.PoseType == PlayerPoseType.RightWalk || this.PoseType == PlayerPoseType.RightIdle)
+                    {
+                        this._frameTime = 0.1F;
+                        this._timer = 0;
+                        this._frame = 0;
+                        this.PoseType = PlayerPoseType.JumpRight;
+                    }
+
+                    this._isJumping = true;
+
+                    if (((PixelisGame)Game.Instance!).OptionsConfig.GetValue<bool>("Sounds"))
+                        this._audioSource.Play(ContentRegistry.Jump);
+                }
             }
             else
             {
                 this.GetComponent<ParticleSystem2D>()?.Definition.EmissionRate = 0;
                 this.GetComponent<ParticleSystem2D>()?.Definition.Looping = false;
-            }
-
-            if (!Input.IsKeyDown(KeyboardKey.D) && !Input.IsKeyDown(KeyboardKey.Right) &&
-                !Input.IsKeyDown(KeyboardKey.A) && !Input.IsKeyDown(KeyboardKey.Left))
-            {
-                if (!this._isJumping)
+                if (isGround && !this._isJumping)
                 {
-                    if (this.PoseType == PlayerPoseType.LeftWalk)
-                    {
-                        this._frameTime = 0.2F;
-                        this.PoseType = PlayerPoseType.LeftIdle;
-                    }
-
-                    if (this.PoseType == PlayerPoseType.RightWalk)
-                    {
-                        this._frameTime = 0.2F;
-                        this.PoseType = PlayerPoseType.RightIdle;
-                    }
+                    velocity.X *= 0.8f;
                 }
-            }
-
-            if (input != 0f)
-            {
-                float accel = isGround ? groundAccel : airAccel;
-                velocity.X += input * accel;
-                velocity.X = Math.Clamp(velocity.X, -maxSpeed, maxSpeed);
-            }
-            else if (isGround)
-            {
-                velocity.X *= 0.8f;
-            }
-
-            if ((Input.IsKeyPressed(KeyboardKey.Space)
-                 || Input.IsKeyPressed(KeyboardKey.W)
-                 || Input.IsKeyPressed(KeyboardKey.Up))
-                && isGround && !_isJumping)
-            {
-                velocity.Y = -jumpForce;
-
-                if (this.PoseType == PlayerPoseType.LeftWalk || this.PoseType == PlayerPoseType.LeftIdle)
-                {
-                    this._frameTime = 0.1F;
-                    this._timer = 0;
-                    this._frame = 0;
-                    this.PoseType = PlayerPoseType.JumpLeft;
-                }
-
-                if (this.PoseType == PlayerPoseType.RightWalk || this.PoseType == PlayerPoseType.RightIdle)
-                {
-                    this._frameTime = 0.1F;
-                    this._timer = 0;
-                    this._frame = 0;
-                    this.PoseType = PlayerPoseType.JumpRight;
-                }
-
-                this._isJumping = true;
-
-                if (((PixelisGame)Game.Instance!).OptionsConfig.GetValue<bool>("Sounds"))
-                    this._audioSource.Play(ContentRegistry.Jump);
             }
         }
 

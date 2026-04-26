@@ -33,7 +33,7 @@ public class MenuGui : Gui
     {
         base.Init();
 
-        GuiManager.Scale = 1.25F;
+        GuiManager.Scale = MathF.Max(1.0F, MathF.Round(((PixelisGame)Game.Instance!).OptionsConfig.GetValue<float>("GuiScale")));
 
         LabelData fullscreen =
             new LabelData(ContentRegistry.Fontoe, "please go to full screen", 18, color: Color.White);

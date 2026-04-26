@@ -19,6 +19,7 @@ namespace Pixelis.CSharp.GUIs;
 
 public class OptionsGui : Gui
 {
+    private static readonly Vector2 BaseWindowSize = new Vector2(550, 310);
     
     public OptionsGui() : base("Options")
     {
@@ -79,6 +80,9 @@ public class OptionsGui : Gui
         
         LabelData masterVolumeLabelData = new LabelData(ContentRegistry.Fontoe, "Master Volume", 18);
         this.AddElement("Master-Volume", new LabelElement(masterVolumeLabelData, Anchor.Center, new Vector2(0, 100)));
+
+        LabelData guiScaleLabelData = new LabelData(ContentRegistry.Fontoe, "GUI Scale", 18);
+        this.AddElement("Gui-Scale", new LabelElement(guiScaleLabelData, Anchor.Center, new Vector2(0, 20)));
         
         // Texture slider bar.
         TextureSlideBarData textureSlideBarData = new TextureSlideBarData(
@@ -93,10 +97,26 @@ public class OptionsGui : Gui
         this.AddElement("Texture-Slider-Bar", new TextureSlideBarElement(textureSlideBarData, Anchor.Center, new Vector2(0, 130), 0, 1, value: ((PixelisGame) Game.Instance!).OptionsConfig.GetValue<float>("MasterVolume"), wholeNumbers: false, size: new Vector2(140, 8), scale: new Vector2(2, 2), clickFunc: (element) => {
             return true;
         }));
+
+        float maxGuiScale = this.GetMaxGuiScale();
+        float guiScale = Math.Clamp(MathF.Round(((PixelisGame) Game.Instance!).OptionsConfig.GetValue<float>("GuiScale")), 1.0F, maxGuiScale);
+        ((PixelisGame) Game.Instance!).OptionsConfig.SetValue("GuiScale", guiScale);
+
+        this.AddElement("Gui-Scale-Slider-Bar", new TextureSlideBarElement(textureSlideBarData, Anchor.Center, new Vector2(0, 50), 1.0f, maxGuiScale, value: guiScale, wholeNumbers: true, size: new Vector2(140, 8), scale: new Vector2(2, 2), clickFunc: (element) => {
+            if (element is TextureSlideBarElement slideBarElement)
+            {
+                float roundedScale = MathF.Round(slideBarElement.Value);
+                slideBarElement.Value = roundedScale;
+                GuiManager.Scale = roundedScale;
+                ((PixelisGame) Game.Instance!).OptionsConfig.SetValue("GuiScale", roundedScale);
+            }
+            return true;
+        }));
     }
     protected override void Update(double delta)
     {
         base.Update(delta);
+        this.SyncGuiScaleSliderToWindowSize();
 
         if (Input.IsKeyPressed(KeyboardKey.Escape))
         {
@@ -171,8 +191,42 @@ public class OptionsGui : Gui
                 ((PixelisGame) Game.Instance!).OptionsConfig.SetValue("MasterVolume", slideBarElement.Value);
                 AudioContext.MasterVolume = slideBarElement.Value;
             }
+
+            if (this.TryGetElement("Gui-Scale-Slider-Bar", out GuiElement? guiScaleElement))
+            {
+                TextureSlideBarElement guiScaleSlideBarElement = (TextureSlideBarElement) guiScaleElement!;
+                float roundedScale = MathF.Round(guiScaleSlideBarElement.Value);
+                ((PixelisGame) Game.Instance!).OptionsConfig.SetValue("GuiScale", roundedScale);
+                GuiManager.Scale = roundedScale;
+            }
         }
         
         base.Dispose(disposing);
+    }
+
+    private float GetMaxGuiScale()
+    {
+        IWindow window = GlobalGraphicsAssets.Window;
+        float widthScale = MathF.Floor(window.GetWidth() / BaseWindowSize.X);
+        float heightScale = MathF.Floor(window.GetHeight() / BaseWindowSize.Y);
+        return MathF.Max(1.0F, MathF.Min(widthScale, heightScale));
+    }
+
+    private void SyncGuiScaleSliderToWindowSize()
+    {
+        if (!this.TryGetElement("Gui-Scale-Slider-Bar", out GuiElement? element) || element is not TextureSlideBarElement slider)
+        {
+            return;
+        }
+
+        float maxGuiScale = this.GetMaxGuiScale();
+        slider.MaxValue = maxGuiScale;
+
+        if (slider.Value > maxGuiScale || GuiManager.Scale > maxGuiScale)
+        {
+            slider.Value = maxGuiScale;
+            GuiManager.Scale = maxGuiScale;
+            ((PixelisGame) Game.Instance!).OptionsConfig.SetValue("GuiScale", maxGuiScale);
+        }
     }
 }

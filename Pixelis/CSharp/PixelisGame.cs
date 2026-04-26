@@ -22,6 +22,7 @@ public class PixelisGame : Game
         jsonConfigBuilder.Add("DebugMode", false);
         jsonConfigBuilder.Add("Sounds", true);
         jsonConfigBuilder.Add("MasterVolume", 0.5F);
+        jsonConfigBuilder.Add("GuiScale", 1.0F);
         jsonConfigBuilder.Add("Toggle-Fps", true);
         this.OptionsConfig = jsonConfigBuilder.Build();
     }
@@ -33,6 +34,9 @@ public class PixelisGame : Game
         
         // Apply Config settings:
         GlobalGraphicsAssets.GraphicsDevice.SyncToVerticalBlank = this.OptionsConfig.GetValue<bool>("Vsync");
+        float guiScale = MathF.Max(1.0F, MathF.Round(this.OptionsConfig.GetValue<float>("GuiScale")));
+        this.OptionsConfig.SetValue("GuiScale", guiScale);
+        GuiManager.Scale = guiScale;
     }
     
     protected override void Init()
@@ -40,6 +44,7 @@ public class PixelisGame : Game
         base.Init();
         GuiManager.SetGui(new MenuGui());
         OverlayManager.AddOverlay(new DebugOverlay("Debug", true));
+        OverlayManager.AddOverlay(new ChatOverlay("Chat", true));
         AudioContext.MasterVolume = ((PixelisGame) Game.Instance!).OptionsConfig.GetValue<float>("MasterVolume");
     }
 
