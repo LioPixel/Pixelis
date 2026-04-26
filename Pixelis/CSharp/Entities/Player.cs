@@ -9,7 +9,6 @@ using MiniAudioEx.Core.StandardAPI;
 using Pixelis.CSharp.GUIs;
 using Pixelis.CSharp.Scenes;
 using Pixelis.CSharp.Scenes.Levels;
-using Pixelis.CSharp.Items;
 using Sparkle.CSharp;
 using Sparkle.CSharp.Entities;
 using Sparkle.CSharp.Entities.Components;
@@ -69,8 +68,6 @@ public class Player : Entity
     // Level completion
     private bool _hasCompletedLevel = false;
 
-    // ── Item-Effekte ─────────────────────────────────────────────
-    private readonly List<ItemEffect> _effects = new();
     private const float BaseMaxSpeed  = 50f;
     private const float BaseGravity   = 15.5f;
     private const float BaseJumpForce = 90f;
@@ -174,66 +171,9 @@ public class Player : Entity
         this.AddComponent(footParticles);
     }
 
-
-    public void ApplyItem(ItemEffect effect)
-    {
-        _effects.RemoveAll(e => e.Type == effect.Type);
-        _effects.Add(effect);
-        ApplyScaleEffect();
-    }
-
-    // ── Item-Effekte: Hilfsmethoden ──────────────────────────────
-
-    private void UpdateEffects(double delta)
-    {
-        bool hadEffect = _effects.Count > 0;
-        _effects.RemoveAll(e => { e.Update((float)delta); return e.IsExpired(); });
-
-        // Wenn ein Effekt abgelaufen ist, Scale zurücksetzen
-        if (hadEffect && _effects.Count < _effects.Count + 1)
-            ApplyScaleEffect();
-    }
-
-    private float GetMaxSpeed()
-    {
-        float speed = BaseMaxSpeed;
-        foreach (var e in _effects)
-            if (e.Type == ItemType.SpeedBoost) speed *= 1.2f;
-        return speed;
-    }
-
-    private float GetScale()
-    {
-        float scale = 1f;
-        foreach (var e in _effects)
-        {
-            if (e.Type == ItemType.GrowBig)     scale *= 1.5f;
-            if (e.Type == ItemType.ShrinkSmall) scale *= 0.5f;
-        }
-        return scale;
-    }
-    
-    // NEU — über den Transform der Entity:
-    private void ApplyScaleEffect()
-    {
-        float scale = GetScale();
-        this.LocalTransform.Scale = new Vector3(scale, scale, 1f);
-
-        // Base height of player is 8 units (half of the 16px box)
-        // Adjust Y so feet stay grounded when scale changes
-        float baseHalfHeight = 8f;
-        float yAdjust = baseHalfHeight * (scale - 1f);
-
-        this._sprite.OffsetPosition = new Vector3(168f * scale, (-2f * scale) - yAdjust, 0f);
-    }
-    
     protected override void Update(double delta)
     {
         base.Update(delta);
-
-        // Effekte updaten (läuft nur für lokalen Spieler relevant)
-        if (IsLocalPlayer)
-            UpdateEffects(delta);
 
         if (!IsLocalPlayer)
         {
@@ -299,7 +239,7 @@ public class Player : Entity
             {
                 float groundAccel = 3f;
                 float airAccel    = 0.5f;
-                float maxSpeed    = GetMaxSpeed();
+                float maxSpeed    = BaseMaxSpeed;
                 float jumpForce   = BaseJumpForce;
 
                 bool emitParticles = false;
@@ -476,8 +416,16 @@ public class Player : Entity
             else if (contact.ShapeB.UserData?.ToString() == "MovingBlock")
                 platformVelocity = contact.ShapeB.Body.LinearVelocity;
         }
-
-        body.LinearVelocity += new Vector2(platformVelocity.X, 0);
+        
+        if (platformVelocity != Vector2.Zero)
+        {
+            Vector3 current = this.LocalTransform.Translation;
+            this.LocalTransform.Translation = new Vector3(
+                current.X + platformVelocity.X * (float)fixedStep,
+                current.Y,
+                current.Z
+            );
+        }
     }
 
     protected override void Draw(GraphicsContext context, Framebuffer framebuffer)

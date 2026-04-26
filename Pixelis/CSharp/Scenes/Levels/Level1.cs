@@ -3,7 +3,6 @@ using Bliss.CSharp.Textures;
 using Bliss.CSharp.Transformations;
 using Pixelis.CSharp.Entities;
 using Pixelis.CSharp.GUIs.Loading;
-using Pixelis.CSharp.Items;
 using Sparkle.CSharp.Scenes;
 using Sparkle.CSharp.Utils.Async;
 using Transform = Bliss.CSharp.Transformations.Transform;
@@ -12,7 +11,6 @@ namespace Pixelis.CSharp.Scenes.Levels;
 
 public class Level1 : LevelScene
 {
-    private readonly List<PickupItem> _items = new();
 
     public Level1() : base("Level 1") {}
 
@@ -30,46 +28,12 @@ public class Level1 : LevelScene
         this.CreatePlatform(13, -4, 6);
         this.CreateOakLog(15, -5);
         this.CreateWinFlag(18, -5);
-
-        // Items spawnen
-        this.SpawnItem(2,  -2, ItemType.SpeedBoost);
-        this.SpawnItem(7,  -3, ItemType.GrowBig);
-        this.SpawnItem(15, -6, ItemType.ShrinkSmall);
-    }
-
-    private void SpawnItem(int blockPosX, int blockPosY, ItemType type)
-    {
-        Texture2D texture = type switch
-        {
-            ItemType.GrowBig     => ContentRegistry.ItemBig,
-            ItemType.ShrinkSmall => ContentRegistry.ItemMini,
-            ItemType.SpeedBoost  => ContentRegistry.ItemFast,
-            _                    => ContentRegistry.ItemBig
-        };
-
-        var transform = new Transform() { Translation = new Vector3(blockPosX * 16, blockPosY * 16, 0) };
-        var item = new PickupItem(transform, type, texture);
-        _items.Add(item);
-        this.AddEntity(item);
     }
 
     protected override void Update(double delta)
     {
         base.Update(delta);
-
-        // Pickup prüfen
-        foreach (var entity in this.GetEntities())
-        {
-            if (entity is not Player player || !player.IsLocalPlayer) continue;
-
-            foreach (var item in _items)
-            {
-                if (item.TryCollect(player.LocalTransform.Translation))
-                    player.ApplyItem(new ItemEffect(item.Type, duration: 7f));
-            }
-
-            break; // Nur lokalen Spieler prüfen
-        }
+        
     }
 
     protected override void OnLevelWon()
