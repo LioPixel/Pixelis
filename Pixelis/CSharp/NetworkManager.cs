@@ -52,6 +52,16 @@ public static class NetworkManager
         Client?.Update();
     }
 
+    public static bool CreateDedicatedServer(ushort slots, string levelName, out string errorMessage)
+    {
+        errorMessage = string.Empty;
+        _currentLevel = levelName;
+        _currentLevelPayload = CreateLevelPayload(levelName);
+        _pendingUsername = string.Empty;
+
+        return TryStartServer(slots, out errorMessage);
+    }
+
     public static bool CreateServer(ushort slots, string levelName, string hostUsername, out string errorMessage)
     {
         errorMessage = string.Empty;
@@ -60,6 +70,25 @@ public static class NetworkManager
         
         // Store the host username so it can be used when the host client connects
         _pendingUsername = hostUsername;
+
+        if (!TryStartServer(slots, out errorMessage))
+        {
+            return false;
+        }
+        
+        Client = new Client();
+        Client.Connected += OnClientConnected;
+        Client.ConnectionFailed += OnClientConnectionFailed;
+        Client.Disconnected += OnClientDisconnected;
+        Client.MessageReceived += HandleClientMessageReceived;
+        Client.Connect("127.0.0.1:7777");
+        Logger.Info($"[CLIENT] Host connecting to own server with username: {hostUsername}");
+        return true;
+    }
+
+    private static bool TryStartServer(ushort slots, out string errorMessage)
+    {
+        errorMessage = string.Empty;
 
         try
         {
@@ -77,12 +106,11 @@ public static class NetworkManager
                 : "Server konnte nicht gestartet werden.";
             return false;
         }
-        
-        // Register server-side message handlers
+
         Server.MessageReceived += HandleServerMessageReceived;
-        
+
         Logger.Info($"[SERVER] Server started on port 7777 with {slots} slots");
-        
+
         Server.ClientConnected += (sender, args) =>
         {
             Logger.Info($"[SERVER] Client {args.Client.Id} connected");
@@ -91,8 +119,7 @@ public static class NetworkManager
             message.AddString(_currentLevel);
             message.AddString(_currentLevelPayload);
             message.AddUShort(args.Client.Id);
-            
-            // Send list of existing player IDs and their usernames
+
             List<ushort> existingPlayerIds = new List<ushort>();
             for (ushort i = 1; i < args.Client.Id; i++)
             {
@@ -101,50 +128,35 @@ public static class NetworkManager
                     existingPlayerIds.Add(i);
                 }
             }
-            
+
             Logger.Info($"[SERVER] Sending {existingPlayerIds.Count} existing players to client {args.Client.Id}");
-            
+
             message.AddInt(existingPlayerIds.Count);
             foreach (ushort playerId in existingPlayerIds)
             {
                 message.AddUShort(playerId);
                 message.AddString(PlayerUsernames.ContainsKey(playerId) ? PlayerUsernames[playerId] : "Player");
             }
-            
+
             Server.Send(message, args.Client);
-            
-            // Wait to receive the new player's username before notifying others
-            // This will be handled in HandleClientUsernameMessage (message ID 8)
         };
-        
+
         Server.ClientDisconnected += (sender, args) =>
         {
             Logger.Info($"[SERVER] Client {args.Client.Id} disconnected - preparing despawn");
-            
-            // Remove from server's player list
+
             NetworkedPlayers.Remove(args.Client.Id);
             PlayerUsernames.Remove(args.Client.Id);
-            
-            // Notify all REMAINING clients to remove this player
+
             Message despawnMessage = Message.Create(MessageSendMode.Reliable, 4);
             despawnMessage.AddUShort(args.Client.Id);
-            
-            // Send to all remaining clients (this excludes the disconnected client)
+
             Server.SendToAll(despawnMessage);
-            
-            // Force the server to process and send pending messages immediately
             Server.Update();
-            
+
             Logger.Info($"[SERVER] Sent despawn message for player {args.Client.Id} to all remaining clients");
         };
-        
-        Client = new Client();
-        Client.Connected += OnClientConnected;
-        Client.ConnectionFailed += OnClientConnectionFailed;
-        Client.Disconnected += OnClientDisconnected;
-        Client.MessageReceived += HandleClientMessageReceived;
-        Client.Connect("127.0.0.1:7777");
-        Logger.Info($"[CLIENT] Host connecting to own server with username: {hostUsername}");
+
         return true;
     }
     
