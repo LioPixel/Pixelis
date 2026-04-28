@@ -65,20 +65,7 @@ public class HostLeavedGui : Gui
             context.SpriteBatch.End();
         }
 
-        float scale = this.ScaleFactor;
-
-        // Define base virtual size (e.g., half of 1280x720) and scale it
-        Vector2 baseSize = new Vector2(550, 310);
-        Vector2 scaledSize = baseSize * scale;
-
-        // Snap window dimensions to scale grid to find the "scaled" center
-        float screenWidth = MathF.Floor(GlobalGraphicsAssets.Window.GetWidth() / (float)scale) * scale;
-        float screenHeight = MathF.Floor(GlobalGraphicsAssets.Window.GetHeight() / (float)scale) * scale;
-
-        Vector2 pos = new Vector2(
-            MathF.Floor((screenWidth / 2.0F - scaledSize.X / 2.0F) / scale) * scale,
-            MathF.Floor((screenHeight / 2.0F - scaledSize.Y / 2.0F) / scale) * scale
-        );
+        ModalGuiRenderer.DrawModalBackground(context, framebuffer, this.ScaleFactor, ModalGuiRenderer.DefaultBaseSize);
 
         base.Draw(context, framebuffer);
     }

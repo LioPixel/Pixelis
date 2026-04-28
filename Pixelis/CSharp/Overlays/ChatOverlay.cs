@@ -5,6 +5,7 @@ using Bliss.CSharp.Interact.Keyboards;
 using Bliss.CSharp.Transformations;
 using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp;
+using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.Overlays;
 using Veldrid;
 
@@ -14,7 +15,7 @@ public class ChatOverlay : Overlay
 {
     private const string InputPrefix = "> ";
     private const int MaxMessages = 10;
-    private const float FontSize = 16.0f;
+    private const float BaseFontSize = 16.0f;
     private const float VisibleDuration = 5.0f;
     private const float FadeDuration = 1.25f;
     private readonly List<string> _messages = new();
@@ -163,21 +164,23 @@ public class ChatOverlay : Overlay
             return;
         }
 
-        float width = 430;
-        float lineHeight = 18;
-        float padding = 10;
-        float borderThickness = 2;
+        float uiScale = MathF.Max(1.0f, GuiManager.Scale);
+        float fontSize = BaseFontSize * uiScale;
+        float width = 430 * uiScale;
+        float lineHeight = 18 * uiScale;
+        float padding = 10 * uiScale;
+        float borderThickness = 2 * uiScale;
         float textWidth = width - padding * 2 - 4;
-        List<string> historyLines = this.GetHistoryLines(textWidth);
+        List<string> historyLines = this.GetHistoryLines(textWidth, fontSize);
         int visibleLines = historyLines.Count;
         float historyHeight = Math.Max(visibleLines, 1) * lineHeight;
-        List<WrappedLine> inputLines = this.GetInputLines(textWidth);
-        float inputBoxHeight = Math.Max(22, inputLines.Count * lineHeight + 6);
-        float panelHeight = historyHeight + inputBoxHeight + 24;
+        List<WrappedLine> inputLines = this.GetInputLines(textWidth, fontSize);
+        float inputBoxHeight = Math.Max(22 * uiScale, inputLines.Count * lineHeight + 6 * uiScale);
+        float panelHeight = historyHeight + inputBoxHeight + 24 * uiScale;
         float windowHeight = GlobalGraphicsAssets.Window.GetHeight();
-        Vector2 origin = new Vector2(16, Math.Max(16, windowHeight - panelHeight - 16));
+        Vector2 origin = new Vector2(16 * uiScale, Math.Max(16 * uiScale, windowHeight - panelHeight - 16 * uiScale));
         float inputBoxY = origin.Y + panelHeight - inputBoxHeight - padding;
-        Vector2 inputTextOrigin = new Vector2(origin.X + padding + 2, inputBoxY + 3);
+        Vector2 inputTextOrigin = new Vector2(origin.X + padding + 2 * uiScale, inputBoxY + 3 * uiScale);
 
         context.PrimitiveBatch.Begin(context.CommandList, framebuffer.OutputDescription);
         context.PrimitiveBatch.DrawFilledRectangle(new RectangleF(origin.X, origin.Y, width, panelHeight), color: ApplyAlpha(new Color(12, 16, 24, 180), alphaFactor));
@@ -189,8 +192,8 @@ public class ChatOverlay : Overlay
 
         if (this._isInputActive)
         {
-            this.DrawInputSelection(context, inputLines, inputTextOrigin, lineHeight, alphaFactor);
-            this.DrawInputCaret(context, inputLines, inputTextOrigin, lineHeight, alphaFactor);
+            this.DrawInputSelection(context, inputLines, inputTextOrigin, lineHeight, alphaFactor, fontSize);
+            this.DrawInputCaret(context, inputLines, inputTextOrigin, lineHeight, alphaFactor, fontSize, uiScale);
         }
 
         context.PrimitiveBatch.End();
@@ -199,7 +202,7 @@ public class ChatOverlay : Overlay
 
         for (int i = 0; i < visibleLines; i++)
         {
-            context.SpriteBatch.DrawText(ContentRegistry.Fontoe, historyLines[i], new Vector2(origin.X + padding, origin.Y + padding + i * lineHeight), 16, color: ApplyAlpha(Color.LightGray, alphaFactor));
+            context.SpriteBatch.DrawText(ContentRegistry.Fontoe, historyLines[i], new Vector2(origin.X + padding, origin.Y + padding + i * lineHeight), (int)fontSize, color: ApplyAlpha(Color.LightGray, alphaFactor));
         }
 
         for (int i = 0; i < inputLines.Count; i++)
@@ -208,7 +211,7 @@ public class ChatOverlay : Overlay
                 ContentRegistry.Fontoe,
                 inputLines[i].Text,
                 new Vector2(inputTextOrigin.X, inputTextOrigin.Y + i * lineHeight),
-                (int)FontSize,
+                (int)fontSize,
                 color: ApplyAlpha(this._isInputActive ? Color.White : Color.Gray, alphaFactor));
         }
 
@@ -422,13 +425,13 @@ public class ChatOverlay : Overlay
         this.InsertText(clipboardText);
     }
 
-    private List<string> GetHistoryLines(float maxWidth)
+    private List<string> GetHistoryLines(float maxWidth, float fontSize)
     {
         List<string> lines = new();
 
         foreach (string message in this._messages)
         {
-            lines.AddRange(this.WrapText(message, maxWidth));
+            lines.AddRange(this.WrapText(message, maxWidth, fontSize));
         }
 
         if (lines.Count > MaxMessages)
@@ -439,16 +442,16 @@ public class ChatOverlay : Overlay
         return lines;
     }
 
-    private List<WrappedLine> GetInputLines(float maxWidth)
+    private List<WrappedLine> GetInputLines(float maxWidth, float fontSize)
     {
         string inputText = this._isInputActive
             ? $"{InputPrefix}{this._inputBuffer}"
             : "Press Enter to chat";
 
-        return this.WrapTextWithIndices(inputText, maxWidth);
+        return this.WrapTextWithIndices(inputText, maxWidth, fontSize);
     }
 
-    private List<string> WrapText(string text, float maxWidth)
+    private List<string> WrapText(string text, float maxWidth, float fontSize)
     {
         if (string.IsNullOrEmpty(text))
         {
@@ -461,7 +464,7 @@ public class ChatOverlay : Overlay
         foreach (char character in text)
         {
             string nextLine = currentLine + character;
-            float nextLineWidth = ContentRegistry.Fontoe.MeasureText(nextLine, 16, Vector2.One).X;
+            float nextLineWidth = ContentRegistry.Fontoe.MeasureText(nextLine, (int)fontSize, Vector2.One).X;
 
             if (currentLine.Length > 0 && nextLineWidth > maxWidth)
             {
@@ -487,7 +490,7 @@ public class ChatOverlay : Overlay
         return lines;
     }
 
-    private List<WrappedLine> WrapTextWithIndices(string text, float maxWidth)
+    private List<WrappedLine> WrapTextWithIndices(string text, float maxWidth, float fontSize)
     {
         if (string.IsNullOrEmpty(text))
         {
@@ -501,7 +504,7 @@ public class ChatOverlay : Overlay
         for (int i = 0; i < text.Length; i++)
         {
             string nextLine = currentLine + text[i];
-            float nextLineWidth = ContentRegistry.Fontoe.MeasureText(nextLine, (int)FontSize, Vector2.One).X;
+            float nextLineWidth = ContentRegistry.Fontoe.MeasureText(nextLine, (int)fontSize, Vector2.One).X;
 
             if (currentLine.Length > 0 && nextLineWidth > maxWidth)
             {
@@ -528,7 +531,7 @@ public class ChatOverlay : Overlay
         return lines;
     }
 
-    private void DrawInputSelection(GraphicsContext context, List<WrappedLine> inputLines, Vector2 textOrigin, float lineHeight, float alphaFactor)
+    private void DrawInputSelection(GraphicsContext context, List<WrappedLine> inputLines, Vector2 textOrigin, float lineHeight, float alphaFactor, float fontSize)
     {
         int selectionStart = Math.Min(this._highlightRange.Start, this._highlightRange.End);
         int selectionEnd = Math.Max(this._highlightRange.Start, this._highlightRange.End);
@@ -554,8 +557,8 @@ public class ChatOverlay : Overlay
 
             int startInLine = visibleStart - lineStart;
             int endInLine = visibleEnd - lineStart;
-            float startX = this.MeasureTextWidth(line.Text[..startInLine]);
-            float selectionWidth = this.MeasureTextWidth(line.Text[startInLine..endInLine]);
+            float startX = this.MeasureTextWidth(line.Text[..startInLine], fontSize);
+            float selectionWidth = this.MeasureTextWidth(line.Text[startInLine..endInLine], fontSize);
 
             context.PrimitiveBatch.DrawFilledRectangle(
                 new RectangleF(textOrigin.X + startX, textOrigin.Y + i * lineHeight, selectionWidth, lineHeight),
@@ -563,7 +566,7 @@ public class ChatOverlay : Overlay
         }
     }
 
-    private void DrawInputCaret(GraphicsContext context, List<WrappedLine> inputLines, Vector2 textOrigin, float lineHeight, float alphaFactor)
+    private void DrawInputCaret(GraphicsContext context, List<WrappedLine> inputLines, Vector2 textOrigin, float lineHeight, float alphaFactor, float fontSize, float uiScale)
     {
         if (!this._showCursor)
         {
@@ -585,22 +588,22 @@ public class ChatOverlay : Overlay
             }
 
             int caretInLine = Math.Clamp(displayCaretIndex - lineStart, 0, line.Text.Length);
-            float caretX = this.MeasureTextWidth(line.Text[..caretInLine]);
+            float caretX = this.MeasureTextWidth(line.Text[..caretInLine], fontSize);
             context.PrimitiveBatch.DrawFilledRectangle(
-                new RectangleF(textOrigin.X + caretX, textOrigin.Y + i * lineHeight, 2, lineHeight),
+                new RectangleF(textOrigin.X + caretX, textOrigin.Y + i * lineHeight, 2 * uiScale, lineHeight),
                 color: ApplyAlpha(Color.White, alphaFactor));
             return;
         }
     }
 
-    private float MeasureTextWidth(string text)
+    private float MeasureTextWidth(string text, float fontSize)
     {
         if (string.IsNullOrEmpty(text))
         {
             return 0.0f;
         }
 
-        return ContentRegistry.Fontoe.MeasureText(text, (int)FontSize, Vector2.One).X;
+        return ContentRegistry.Fontoe.MeasureText(text, (int)fontSize, Vector2.One).X;
     }
 
     private float GetAlphaFactor()

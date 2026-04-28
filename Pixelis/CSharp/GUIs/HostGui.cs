@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+﻿﻿using System.Numerics;
 using Bliss.CSharp.Colors;
 using Bliss.CSharp.Graphics.Rendering.Renderers.Batches.Sprites;
 using Bliss.CSharp.Interact;
@@ -21,6 +21,7 @@ public class HostGui : Gui
 {
     private string _errorMessage = "";
     private float _errorDisplayTime = 0f;
+    private bool _isTutorialOpen = false;
 
     public HostGui () : base("Host", null) { }
 
@@ -30,6 +31,14 @@ public class HostGui : Gui
         
         LabelData labelData = new LabelData(ContentRegistry.Fontoe, "Host", 18);
         this.AddElement("Titel", new LabelElement(labelData, Anchor.TopCenter, new Vector2(0, 50), new Vector2(5, 5)));
+
+        TextureButtonData infoButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        LabelData infoButtonLabelData = new LabelData(ContentRegistry.Fontoe, "!", 18, hoverColor: Color.White);
+        this.AddElement("Tutorial-Info-Button", new TextureButtonElement(infoButtonData, infoButtonLabelData, Anchor.TopRight, new Vector2(-20, 20), size: new Vector2(40, 40), textOffset: new Vector2(0, 1), clickFunc: _ =>
+        {
+            SetTutorialVisible(true);
+            return true;
+        }));
         
         TextureButtonData backButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         LabelData backButtonLabelData = new LabelData(ContentRegistry.Fontoe, "Back", 18, hoverColor: Color.White);
@@ -130,6 +139,34 @@ public class HostGui : Gui
 
         LabelData errorLabelData = new LabelData(ContentRegistry.Fontoe, "", 18, color: Color.Red);
         this.AddElement("Error-Label", new LabelElement(errorLabelData, Anchor.Center, new Vector2(0, 110), new Vector2(1, 1)));
+
+        this.AddElement("Tutorial-Title", new LabelElement(
+            new LabelData(ContentRegistry.Fontoe, "Tailscale Tutorial", 18, color: Color.White),
+            Anchor.Center,
+            new Vector2(0, -108),
+            new Vector2(1.8F, 1.8F)));
+
+        string tailscaleTutorialText =
+            "1. Install Tailscale on host + friends.\n" +
+            "2. Sign in with the same Tailscale account/team.\n" +
+            "3. Open Tailscale and connect on all devices.\n" +
+            "4. Host the server here in Pixelis.\n" +
+            "5. Share your Tailscale IPv4 (100.x.x.x).\n" +
+            "6. Friends Join with your IP + port.";
+        this.AddElement("Tutorial-Body", new LabelElement(
+            new LabelData(ContentRegistry.Fontoe, tailscaleTutorialText, 18, color: Color.LightGray),
+            Anchor.Center,
+            new Vector2(0, -8)));
+
+        TextureButtonData tutorialCloseButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        LabelData tutorialCloseButtonLabelData = new LabelData(ContentRegistry.Fontoe, "Close", 18, hoverColor: Color.White);
+        this.AddElement("Tutorial-Close-Button", new TextureButtonElement(tutorialCloseButtonData, tutorialCloseButtonLabelData, Anchor.Center, new Vector2(0, 112), size: new Vector2(150, 40), textOffset: new Vector2(0, 1), clickFunc: _ =>
+        {
+            SetTutorialVisible(false);
+            return true;
+        }));
+
+        SetTutorialVisible(false);
         
         // Host button.
         TextureButtonData createButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
@@ -193,6 +230,12 @@ public class HostGui : Gui
             }
         }
         
+        if (_isTutorialOpen && Input.IsKeyPressed(KeyboardKey.Escape))
+        {
+            SetTutorialVisible(false);
+            return;
+        }
+
         if (Input.IsKeyPressed(KeyboardKey.Escape))
         {
 
@@ -215,6 +258,43 @@ public class HostGui : Gui
             errorLabel.Data.Text = _errorMessage;
         }
     }
+
+    private void SetTutorialVisible(bool visible)
+    {
+        _isTutorialOpen = visible;
+        ToggleHostElements(!visible);
+        ToggleElement("Tutorial-Title", visible);
+        ToggleElement("Tutorial-Body", visible);
+        ToggleElement("Tutorial-Close-Button", visible);
+        ToggleElement("Tutorial-Info-Button", !visible);
+    }
+
+    private void ToggleHostElements(bool visible)
+    {
+        ToggleElement("Titel", visible);
+        ToggleElement("Options-Button", visible);
+        ToggleElement("slots", visible);
+        ToggleElement("2", visible);
+        ToggleElement("10", visible);
+        ToggleElement("slot-value", visible);
+        ToggleElement("Texture-Slider-Bar", visible);
+        ToggleElement("Texture-Drop-Down", visible);
+        ToggleElement("Name-Text-Box", visible);
+        ToggleElement("Error-Label", visible);
+        ToggleElement("Host-Button", visible);
+    }
+
+    private void ToggleElement(string name, bool visible)
+    {
+        GuiElement? element = this.GetElement(name);
+        if (element == null)
+        {
+            return;
+        }
+
+        element.Enabled = visible;
+        element.Interactable = visible;
+    }
     
     
     protected override void Draw(GraphicsContext context, Framebuffer framebuffer)
@@ -232,36 +312,31 @@ public class HostGui : Gui
             context.SpriteBatch.End();
         }
         
-        float scale = this.ScaleFactor;
-            
-        // Define base virtual size (e.g., half of 1280x720) and scale it
-        Vector2 baseSize = new Vector2(550, 310);
-        Vector2 scaledSize = baseSize * scale;
+        ModalGuiRenderer.DrawModalBackground(context, framebuffer, this.ScaleFactor, ModalGuiRenderer.DefaultBaseSize);
 
-        // Snap window dimensions to scale grid to find the "scaled" center
-        float screenWidth = MathF.Floor(GlobalGraphicsAssets.Window.GetWidth() / (float) scale) * scale;
-        float screenHeight = MathF.Floor(GlobalGraphicsAssets.Window.GetHeight() / (float) scale) * scale;
-        
-        Vector2 pos = new Vector2(
-            MathF.Floor((screenWidth / 2.0F - scaledSize.X / 2.0F) / scale) * scale,
-            MathF.Floor((screenHeight / 2.0F - scaledSize.Y / 2.0F) / scale) * scale
-        );
-        
-        // Draw gui rectangle
-        context.PrimitiveBatch.Begin(context.CommandList, framebuffer.OutputDescription);
-            
-        // Overlay (Full screen)
-        context.PrimitiveBatch.DrawFilledRectangle(new RectangleF(0, 0, GlobalGraphicsAssets.Window.GetWidth(), GlobalGraphicsAssets.Window.GetHeight()), color: new Color(128, 128, 128, 128));
-            
-        // Background Box
-        context.PrimitiveBatch.DrawFilledRectangle(new RectangleF(pos.X, pos.Y, scaledSize.X, scaledSize.Y), color: new Color(128, 128, 128, 128));
-            
-        // Border
-        context.PrimitiveBatch.DrawEmptyRectangle(new RectangleF(pos.X, pos.Y, scaledSize.X, scaledSize.Y), 4 * scale, color: new Color(64, 64, 64, 128));
-            
-        context.PrimitiveBatch.End();
-        
-        
+        if (_isTutorialOpen)
+        {
+            float scale = this.ScaleFactor;
+            Vector2 windowSize = new Vector2(GlobalGraphicsAssets.Window.GetWidth(), GlobalGraphicsAssets.Window.GetHeight());
+            Vector2 modalSize = new Vector2(560, 360) * scale;
+            Vector2 modalPosition = new Vector2(
+                MathF.Floor((windowSize.X - modalSize.X) / (2F * scale)) * scale,
+                MathF.Floor((windowSize.Y - modalSize.Y) / (2F * scale)) * scale);
+
+            context.PrimitiveBatch.Begin(context.CommandList, framebuffer.OutputDescription);
+            context.PrimitiveBatch.DrawFilledRectangle(
+                new RectangleF(0, 0, windowSize.X, windowSize.Y),
+                color: new Color(0, 0, 0, 150));
+            context.PrimitiveBatch.DrawFilledRectangle(
+                new RectangleF(modalPosition.X, modalPosition.Y, modalSize.X, modalSize.Y),
+                color: new Color(35, 35, 35, 235));
+            context.PrimitiveBatch.DrawEmptyRectangle(
+                new RectangleF(modalPosition.X, modalPosition.Y, modalSize.X, modalSize.Y),
+                3 * scale,
+                color: Color.White);
+            context.PrimitiveBatch.End();
+        }
+
         
         base.Draw(context, framebuffer);
     }

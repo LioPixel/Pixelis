@@ -20,6 +20,7 @@ namespace Pixelis.CSharp.GUIs;
 public class OptionsGui : Gui
 {
     private static readonly Vector2 BaseWindowSize = new Vector2(550, 310);
+    private int _guiScaleMarkerMax;
     
     public OptionsGui() : base("Options")
     {
@@ -98,20 +99,30 @@ public class OptionsGui : Gui
             return true;
         }));
 
+        LabelData keyBingsLabelData = new LabelData(ContentRegistry.Fontoe, "Keybinds", 18, hoverColor: Color.White);
+        this.AddElement("Key-Binds-Button", new TextureButtonElement(backButtonData, keyBingsLabelData, Anchor.Center, new Vector2(180, -120), size: new Vector2(130, 40), textOffset: new Vector2(0, 1), clickFunc: _ =>
+        {
+            GuiManager.SetGui(new KeyBingsGui());
+            return true;
+        }));
+
         float maxGuiScale = this.GetMaxGuiScale();
         float guiScale = Math.Clamp(MathF.Round(((PixelisGame) Game.Instance!).OptionsConfig.GetValue<float>("GuiScale")), 1.0F, maxGuiScale);
         ((PixelisGame) Game.Instance!).OptionsConfig.SetValue("GuiScale", guiScale);
+        GuiManager.Scale = guiScale;
 
         this.AddElement("Gui-Scale-Slider-Bar", new TextureSlideBarElement(textureSlideBarData, Anchor.Center, new Vector2(0, 50), 1.0f, maxGuiScale, value: guiScale, wholeNumbers: true, size: new Vector2(140, 8), scale: new Vector2(2, 2), clickFunc: (element) => {
             if (element is TextureSlideBarElement slideBarElement)
             {
-                float roundedScale = MathF.Round(slideBarElement.Value);
+                float roundedScale = Math.Clamp(MathF.Round(slideBarElement.Value), 1.0F, slideBarElement.MaxValue);
                 slideBarElement.Value = roundedScale;
                 GuiManager.Scale = roundedScale;
                 ((PixelisGame) Game.Instance!).OptionsConfig.SetValue("GuiScale", roundedScale);
             }
             return true;
         }));
+
+        this.RebuildGuiScaleMarkers((int)maxGuiScale);
     }
     protected override void Update(double delta)
     {
@@ -147,34 +158,7 @@ public class OptionsGui : Gui
             context.SpriteBatch.End();
         }
         
-        float scale = this.ScaleFactor;
-
-        // Define base virtual size (e.g., half of 1280x720) and scale it
-        Vector2 baseSize = new Vector2(550, 310);
-        Vector2 scaledSize = baseSize * scale;
-
-        // Snap window dimensions to scale grid to find the "scaled" center
-        float screenWidth = MathF.Floor(GlobalGraphicsAssets.Window.GetWidth() / (float) scale) * scale;
-        float screenHeight = MathF.Floor(GlobalGraphicsAssets.Window.GetHeight() / (float) scale) * scale;
-        
-        Vector2 pos = new Vector2(
-            MathF.Floor((screenWidth / 2.0F - scaledSize.X / 2.0F) / scale) * scale,
-            MathF.Floor((screenHeight / 2.0F - scaledSize.Y / 2.0F) / scale) * scale
-        );
-        
-        // Draw gui rectangle
-        context.PrimitiveBatch.Begin(context.CommandList, framebuffer.OutputDescription);
-            
-        // Overlay (Full screen)
-        context.PrimitiveBatch.DrawFilledRectangle(new RectangleF(0, 0, GlobalGraphicsAssets.Window.GetWidth(), GlobalGraphicsAssets.Window.GetHeight()), color: new Color(128, 128, 128, 128));
-            
-        // Background Box
-        context.PrimitiveBatch.DrawFilledRectangle(new RectangleF(pos.X, pos.Y, scaledSize.X, scaledSize.Y), color: new Color(128, 128, 128, 128));
-            
-        // Border
-        context.PrimitiveBatch.DrawEmptyRectangle(new RectangleF(pos.X, pos.Y, scaledSize.X, scaledSize.Y), 4 * scale, color: new Color(64, 64, 64, 128));
-            
-        context.PrimitiveBatch.End();
+        ModalGuiRenderer.DrawModalBackground(context, framebuffer, this.ScaleFactor, BaseWindowSize);
         
         
         
@@ -220,13 +204,55 @@ public class OptionsGui : Gui
         }
 
         float maxGuiScale = this.GetMaxGuiScale();
+        int maxGuiScaleInt = (int)maxGuiScale;
         slider.MaxValue = maxGuiScale;
+        this.RebuildGuiScaleMarkers(maxGuiScaleInt);
 
-        if (slider.Value > maxGuiScale || GuiManager.Scale > maxGuiScale)
+        float clampedScale = Math.Clamp(MathF.Round(slider.Value), 1.0F, maxGuiScale);
+
+        if (MathF.Abs(slider.Value - clampedScale) > 0.001f)
         {
-            slider.Value = maxGuiScale;
-            GuiManager.Scale = maxGuiScale;
-            ((PixelisGame) Game.Instance!).OptionsConfig.SetValue("GuiScale", maxGuiScale);
+            slider.Value = clampedScale;
+        }
+
+        if (MathF.Abs(GuiManager.Scale - clampedScale) > 0.001f)
+        {
+            GuiManager.Scale = clampedScale;
+            ((PixelisGame) Game.Instance!).OptionsConfig.SetValue("GuiScale", clampedScale);
+        }
+    }
+
+    private void RebuildGuiScaleMarkers(int maxGuiScale)
+    {
+        maxGuiScale = Math.Max(1, maxGuiScale);
+        if (this._guiScaleMarkerMax == maxGuiScale)
+        {
+            return;
+        }
+
+        for (int i = 1; i <= this._guiScaleMarkerMax; i++)
+        {
+            this.RemoveElement($"Gui-Scale-Marker-{i}");
+        }
+
+        this._guiScaleMarkerMax = maxGuiScale;
+
+        if (maxGuiScale == 1)
+        {
+            LabelData singleLabelData = new LabelData(ContentRegistry.Fontoe, "x1", 18);
+            this.AddElement("Gui-Scale-Marker-1", new LabelElement(singleLabelData, Anchor.Center, new Vector2(0, 76), new Vector2(0.75f, 0.75f)));
+            return;
+        }
+
+        const float sliderWidth = 140.0f;
+        const float leftX = -sliderWidth / 2.0f;
+        float step = sliderWidth / (maxGuiScale - 1);
+
+        for (int i = 1; i <= maxGuiScale; i++)
+        {
+            float x = leftX + (i - 1) * step;
+            LabelData markerLabelData = new LabelData(ContentRegistry.Fontoe, $"x{i}", 18);
+            this.AddElement($"Gui-Scale-Marker-{i}", new LabelElement(markerLabelData, Anchor.Center, new Vector2(x, 76), new Vector2(0.75f, 0.75f)));
         }
     }
 }

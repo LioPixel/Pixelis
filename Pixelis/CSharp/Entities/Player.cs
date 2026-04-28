@@ -7,6 +7,7 @@ using Bliss.CSharp.Transformations;
 using Box2D;
 using MiniAudioEx.Core.StandardAPI;
 using Pixelis.CSharp.GUIs;
+using Pixelis.CSharp.Controls;
 using Pixelis.CSharp.Scenes;
 using Pixelis.CSharp.Scenes.Levels;
 using Sparkle.CSharp;
@@ -245,11 +246,18 @@ public class Player : Entity
                 float airAccel    = 0.5f;
                 float maxSpeed    = BaseMaxSpeed;
                 float jumpForce   = BaseJumpForce;
+                KeyboardKey moveLeftKey = KeyBindings.GetMoveLeft();
+                KeyboardKey moveRightKey = KeyBindings.GetMoveRight();
+                KeyboardKey jumpKey = KeyBindings.GetJump();
 
                 bool emitParticles = false;
 
                 float input = 0f;
-                if ((Input.IsKeyDown(KeyboardKey.A) || Input.IsKeyDown(KeyboardKey.Left)) && !isLeftWallCol)
+                bool moveLeftDown = Input.IsKeyDown(moveLeftKey) || Input.IsKeyDown(KeyboardKey.Left);
+                bool moveRightDown = Input.IsKeyDown(moveRightKey) || Input.IsKeyDown(KeyboardKey.Right);
+                bool jumpPressed = Input.IsKeyPressed(jumpKey) || Input.IsKeyPressed(KeyboardKey.W) || Input.IsKeyPressed(KeyboardKey.Up);
+
+                if (moveLeftDown && !isLeftWallCol)
                 {
                     input -= 1f;
                     if (!_isJumping && isGround)
@@ -261,7 +269,7 @@ public class Player : Entity
                     }
                 }
 
-                if ((Input.IsKeyDown(KeyboardKey.D) || Input.IsKeyDown(KeyboardKey.Right)) && !isRightWallCol)
+                if (moveRightDown && !isRightWallCol)
                 {
                     input += 1f;
                     if (!_isJumping && isGround)
@@ -284,8 +292,7 @@ public class Player : Entity
                     this.GetComponent<ParticleSystem2D>()?.Definition.Looping = false;
                 }
 
-                if (!Input.IsKeyDown(KeyboardKey.D) && !Input.IsKeyDown(KeyboardKey.Right) &&
-                    !Input.IsKeyDown(KeyboardKey.A) && !Input.IsKeyDown(KeyboardKey.Left))
+                if (!moveRightDown && !moveLeftDown)
                 {
                     if (!this._isJumping)
                     {
@@ -314,10 +321,7 @@ public class Player : Entity
                     velocity.X *= 0.8f;
                 }
 
-                if ((Input.IsKeyPressed(KeyboardKey.Space)
-                     || Input.IsKeyPressed(KeyboardKey.W)
-                     || Input.IsKeyPressed(KeyboardKey.Up))
-                    && isGround && !_isJumping)
+                if (jumpPressed && isGround && !_isJumping)
                 {
                     velocity.Y = -jumpForce;
 

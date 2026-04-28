@@ -24,6 +24,9 @@ public class PixelisGame : Game
         jsonConfigBuilder.Add("MasterVolume", 0.5F);
         jsonConfigBuilder.Add("GuiScale", 1.0F);
         jsonConfigBuilder.Add("Toggle-Fps", true);
+        jsonConfigBuilder.Add("KeybindMoveLeft", "A");
+        jsonConfigBuilder.Add("KeybindMoveRight", "D");
+        jsonConfigBuilder.Add("KeybindJump", "Space");
         this.OptionsConfig = jsonConfigBuilder.Build();
     }
 
