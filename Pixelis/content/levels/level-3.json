@@ -1,0 +1,745 @@
+{
+  "Id": "level-3",
+  "Name": "Level 3",
+  "NextLevelName": "Level 4",
+  "Blocks": [
+    {
+      "Type": "Tree",
+      "X": 143,
+      "Y": -22,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Tree",
+      "X": 144,
+      "Y": -22,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "FlowerOrange",
+      "X": 147,
+      "Y": -22,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "WinFlag",
+      "X": 148,
+      "Y": -22,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "FlowerOrange",
+      "X": 150,
+      "Y": -22,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 142,
+      "Y": -21,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 143,
+      "Y": -21,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 144,
+      "Y": -21,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 145,
+      "Y": -21,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 146,
+      "Y": -21,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 147,
+      "Y": -21,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 148,
+      "Y": -21,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 149,
+      "Y": -21,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 150,
+      "Y": -21,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "FlowerOrange",
+      "X": 127,
+      "Y": -16,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Portal",
+      "X": 130,
+      "Y": -16,
+      "TargetX": 143,
+      "TargetY": -23,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "FlowerOrange",
+      "X": 122,
+      "Y": -15,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "PlantSunFlower",
+      "X": 124,
+      "Y": -15,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 127,
+      "Y": -15,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Portal",
+      "X": 23,
+      "Y": -14,
+      "TargetX": 43,
+      "TargetY": -14,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "RockWithGrass",
+      "X": 110,
+      "Y": -14,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 121,
+      "Y": -14,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 122,
+      "Y": -14,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 123,
+      "Y": -14,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 124,
+      "Y": -14,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Bush",
+      "X": 103,
+      "Y": -13,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 106,
+      "Y": -13,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 110,
+      "Y": -13,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Bush",
+      "X": 45,
+      "Y": -12,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "RockWithGrass",
+      "X": 48,
+      "Y": -12,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "PlantSunFlower",
+      "X": 52,
+      "Y": -12,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "PlantSunFlower",
+      "X": 62,
+      "Y": -12,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 65,
+      "Y": -12,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "RockWithGrass",
+      "X": 80,
+      "Y": -12,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "TreeDead",
+      "X": 84,
+      "Y": -12,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "FlowerOrange",
+      "X": 88,
+      "Y": -12,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "TreeDead",
+      "X": 92,
+      "Y": -12,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 99,
+      "Y": -12,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 103,
+      "Y": -12,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Bush",
+      "X": 113,
+      "Y": -12,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "MovingBlock",
+      "X": 116,
+      "Y": -12,
+      "TargetX": 120,
+      "TargetY": -16,
+      "Speed": 1.5,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 45,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 46,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 47,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 48,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 52,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 57,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 62,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 80,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 83,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 84,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 85,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 86,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 87,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 88,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 89,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 90,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 91,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 92,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 93,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 94,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 95,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 96,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 113,
+      "Y": -11,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 68,
+      "Y": -10,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "MovingBlock",
+      "X": 71,
+      "Y": -10,
+      "TargetX": 78,
+      "TargetY": -12,
+      "Speed": 1.5,
+      "Depth": 0.5
+    },
+    {
+      "Type": "TreeDead",
+      "X": -1,
+      "Y": 0,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "TreeDead",
+      "X": 2,
+      "Y": 0,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "RockWithGrass",
+      "X": 4,
+      "Y": 0,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "MovingBlock",
+      "X": 7,
+      "Y": 0,
+      "TargetX": 14,
+      "TargetY": 2,
+      "Speed": 1,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": -2,
+      "Y": 1,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": -1,
+      "Y": 1,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 0,
+      "Y": 1,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 1,
+      "Y": 1,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 2,
+      "Y": 1,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 3,
+      "Y": 1,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 4,
+      "Y": 1,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Tree",
+      "X": 17,
+      "Y": 3,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 16,
+      "Y": 4,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 17,
+      "Y": 4,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "Block",
+      "X": 18,
+      "Y": 4,
+      "TargetX": null,
+      "TargetY": null,
+      "Speed": null,
+      "Depth": 0.5
+    },
+    {
+      "Type": "MovingBlock",
+      "X": 20,
+      "Y": 4,
+      "TargetX": 20,
+      "TargetY": -14,
+      "Speed": 0.5,
+      "Depth": 0.5
+    }
+  ]
+}

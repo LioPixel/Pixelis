@@ -3,9 +3,7 @@ using Bliss.CSharp.Textures;
 using MiniAudioEx.Core.StandardAPI;
 using Sparkle.CSharp.Content;
 using Sparkle.CSharp.Content.Types;
-using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.Registries;
-using Veldrid;
 
 namespace Pixelis.CSharp;
 
@@ -54,10 +52,7 @@ public class ContentRegistry : Registry {
     public static Texture2D UiFilledBar { get; private set; }
     public static Texture2D UiSliderLowRes { get; private set; }
     public static Texture2D Logo { get; private set; }
-    public static Texture2D ItemBig { get; private set; }
-    public static Texture2D ItemMini  { get; private set; }
-    public static Texture2D ItemFast  { get; private set; }
-
+    public static Texture2D Grass { get; private set; }
 
     public static Font Fontoe { get; private set; }
 
@@ -108,9 +103,7 @@ public class ContentRegistry : Registry {
         UiFilledBar = content.Load(new TextureContent("content/ui_filled_bar.png"));
         UiSliderLowRes = content.Load(new TextureContent("content/ui_slider_low_res.png"));
         Logo = content.Load(new TextureContent("content/logo.png"));
-        ItemBig = content.Load(new TextureContent("content/BigItem.png"));
-        ItemMini = content.Load(new TextureContent("content/MiniItem.png"));
-        ItemFast = content.Load(new TextureContent("content/FastItem.png"));
+        Grass = content.Load(new TextureContent("content/grass.png"));
         Fontoe = content.Load(new FontContent("content/fontoe.ttf"));
     }
 

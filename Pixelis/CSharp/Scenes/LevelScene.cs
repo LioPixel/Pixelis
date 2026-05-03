@@ -10,7 +10,6 @@ using Bliss.CSharp.Windowing;
 using Box2D;
 using Pixelis.CSharp.Entities;
 using Pixelis.CSharp.GUIs;
-using Sparkle.CSharp;
 using Sparkle.CSharp.Entities;
 using Sparkle.CSharp.Entities.Components;
 using Sparkle.CSharp.Graphics;
@@ -211,6 +210,13 @@ public abstract class LevelScene : Scene
     }
     
     protected void CreateBush(int blockPosX, int blockPosY, float layerDepth = 0.4F)
+    {
+        Entity entity = new Entity(new Transform() { Translation = new Vector3(blockPosX * 16, blockPosY * 16 + 1, 0) });
+        entity.AddComponent(new Sprite(ContentRegistry.Bush, Vector2.Zero, layerDepth: layerDepth));
+        this.AddEntity(entity);
+    }
+    
+    protected void CreateGrass(int blockPosX, int blockPosY, float layerDepth = 0.4F)
     {
         Entity entity = new Entity(new Transform() { Translation = new Vector3(blockPosX * 16, blockPosY * 16 + 1, 0) });
         entity.AddComponent(new Sprite(ContentRegistry.Bush, Vector2.Zero, layerDepth: layerDepth));

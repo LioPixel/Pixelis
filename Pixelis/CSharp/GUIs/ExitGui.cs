@@ -1,10 +1,8 @@
-﻿using System.Net.Mime;
-using System.Numerics;
+﻿using System.Numerics;
 using Bliss.CSharp.Colors;
 using Bliss.CSharp.Interact;
 using Bliss.CSharp.Interact.Keyboards;
 using Bliss.CSharp.Textures;
-using Bliss.CSharp.Transformations;
 using Bliss.CSharp.Windowing;
 using MiniAudioEx.Core.StandardAPI;
 using Sparkle.CSharp;
@@ -12,7 +10,6 @@ using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.GUI.Elements;
 using Sparkle.CSharp.GUI.Elements.Data;
-using Sparkle.CSharp.Overlays;
 using Sparkle.CSharp.Scenes;
 using Veldrid;
 

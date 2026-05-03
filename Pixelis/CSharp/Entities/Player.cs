@@ -9,13 +9,11 @@ using MiniAudioEx.Core.StandardAPI;
 using Pixelis.CSharp.GUIs;
 using Pixelis.CSharp.Controls;
 using Pixelis.CSharp.Scenes;
-using Pixelis.CSharp.Scenes.Levels;
 using Sparkle.CSharp;
 using Sparkle.CSharp.Entities;
 using Sparkle.CSharp.Entities.Components;
 using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.Graphics.Particles.Dim2;
-using Sparkle.CSharp.Graphics.Particles.Dim2.Collisions.Providers;
 using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.Physics.Dim2;
 using Sparkle.CSharp.Physics.Dim2.Def;
@@ -556,16 +554,7 @@ public class Player : Entity
         {
             return customLevelScene.NextLevelName;
         }
-
-        if (this.Scene is Level1) return "Level 2";
-        if (this.Scene is Level2) return "Level 3";
-        if (this.Scene is Level3) return "Level 4";
-        if (this.Scene is Level4) return "Level 5";
-        if (this.Scene is Level5) return "Level 6";
-        if (this.Scene is Level6) return "Level 7";
-        if (this.Scene is Level7) return "Level 8";
-        if (this.Scene is Level8) return "Level 9";
-        if (this.Scene is Level9) return "Level 10";
+        
         return "Level 1";
     }
 

@@ -1,26 +1,49 @@
 using Pixelis.CSharp.Levels;
-using Pixelis.CSharp.Scenes.Levels;
 using Sparkle.CSharp.Scenes;
 
 namespace Pixelis.CSharp.Scenes;
 
 public static class LevelFactory
 {
-    public static readonly string[] BuiltInLevelNames =
-    [
-        "Level 1",
-        "Level 2",
-        "Level 3",
-        "Level 4",
-        "Level 5",
-        "Level 6",
-        "Level 7",
-        "Level 8",
-        "Level 9",
-        "Level 10",
-        "Level 11",
-        "Level 12",
-    ];
+
+    public static List<string> BuiltInLevelNames
+    {
+        get
+        {
+            List<string> names = new List<string>();
+            try
+            {
+                string dir = CustomLevelStorage.ContentDirectoryPath;
+                if (Directory.Exists(dir))
+                {
+                    foreach (string filePath in Directory.GetFiles(dir, "*.json"))
+                    {
+                        try
+                        {
+                            string json = File.ReadAllText(filePath);
+                            CustomLevelData? data = System.Text.Json.JsonSerializer.Deserialize<CustomLevelData>(json);
+                            string levelName = data?.Name ?? Path.GetFileNameWithoutExtension(filePath);
+                            if (!string.IsNullOrWhiteSpace(levelName) && !names.Contains(levelName, StringComparer.OrdinalIgnoreCase))
+                            {
+                                names.Add(levelName.Trim());
+                            }
+                        }
+                        catch
+                        {
+                            // ignore malformed files
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // ignore IO errors
+            }
+
+            names.Sort(StringComparer.OrdinalIgnoreCase);
+            return names;
+        }
+    }
 
     public static bool IsBuiltInLevelName(string name)
     {
@@ -29,29 +52,23 @@ public static class LevelFactory
 
     public static List<string> GetMenuLevelNames()
     {
-        List<string> names = [.. BuiltInLevelNames];
-        names.AddRange(CustomLevelStorage.GetCustomLevelNames());
+        List<string> names = new List<string>(BuiltInLevelNames);
+
+        foreach (string custom in CustomLevelStorage.GetCustomLevelNames())
+        {
+            if (!names.Contains(custom, StringComparer.OrdinalIgnoreCase))
+            {
+                names.Add(custom);
+            }
+        }
+
+        names.Sort(StringComparer.OrdinalIgnoreCase);
         return names;
     }
 
     public static Scene? CreateByName(string levelName)
     {
-        return levelName switch
-        {
-            "Level 1" => new Level1(),
-            "Level 2" => new Level2(),
-            "Level 3" => new Level3(),
-            "Level 4" => new Level4(),
-            "Level 5" => new Level5(),
-            "Level 6" => new Level6(),
-            "Level 7" => new Level7(),
-            "Level 8" => new Level8(),
-            "Level 9" => new Level9(),
-            "Level 10" => new Level10(),
-            "Level 11" => new Level11(),
-            "Level 12" => new Level12(),
-            _ => CreateCustomLevel(levelName)
-        };
+        return CreateCustomLevel(levelName);
     }
 
     private static Scene? CreateCustomLevel(string levelName)

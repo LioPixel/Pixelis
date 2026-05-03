@@ -1,7 +1,6 @@
 using System.Text;
 using System.Text.Json;
 using Pixelis.CSharp.Scenes;
-using Sparkle.CSharp.Scenes;
 
 namespace Pixelis.CSharp.Levels;
 
@@ -12,40 +11,58 @@ public static class CustomLevelStorage
         WriteIndented = true
     };
 
+    // Directory inside the game's content folder where shipped JSON levels can be placed.
+    // These are read-only (shipped with the game) and are discovered automatically.
+    public static string ContentDirectoryPath
+        => Path.Combine(AppContext.BaseDirectory, "content", "levels");
+
+    // Directory where user-created / saved custom levels are written to.
     public static string DirectoryPath
         => Path.Combine(AppContext.BaseDirectory, "custom-levels");
 
     public static IReadOnlyList<CustomLevelData> LoadAll()
     {
+        // Ensure save directory exists so Save() continues to work without surprises
         EnsureDirectory();
 
         List<CustomLevelData> levels = [];
 
-        foreach (string filePath in Directory.GetFiles(DirectoryPath, "*.json"))
+        // Search both shipped content levels and user-saved custom-levels
+        string[] searchDirs = new[] { ContentDirectoryPath, DirectoryPath };
+
+        foreach (string dir in searchDirs)
         {
-            try
-            {
-                string json = File.ReadAllText(filePath);
-                CustomLevelData? data = JsonSerializer.Deserialize<CustomLevelData>(json, JsonOptions);
+            if (!Directory.Exists(dir)) continue;
 
-                if (data == null)
+            foreach (string filePath in Directory.GetFiles(dir, "*.json"))
+            {
+                try
                 {
-                    continue;
-                }
+                    string json = File.ReadAllText(filePath);
+                    CustomLevelData? data = JsonSerializer.Deserialize<CustomLevelData>(json, JsonOptions);
 
-                data.Id = GetIdFromPath(filePath);
-                data.Name = string.IsNullOrWhiteSpace(data.Name) ? data.Id : data.Name.Trim();
-                data.NextLevelName = data.NextLevelName?.Trim() ?? string.Empty;
-                data.Blocks ??= [];
-                levels.Add(data);
-            }
-            catch
-            {
-                // Skip broken level files so one bad save does not break the menu.
+                    if (data == null)
+                    {
+                        continue;
+                    }
+
+                    data.Id = GetIdFromPath(filePath);
+                    data.Name = string.IsNullOrWhiteSpace(data.Name) ? data.Id : data.Name.Trim();
+                    data.NextLevelName = data.NextLevelName?.Trim() ?? string.Empty;
+                    data.Blocks ??= [];
+                    levels.Add(data);
+                }
+                catch
+                {
+                    // Skip broken level files so one bad save does not break the menu.
+                }
             }
         }
 
+        // If both a shipped and a saved level share the same name, prefer the saved one.
         return levels
+            .GroupBy(l => l.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(g => g.First())
             .OrderBy(level => level.Name, StringComparer.OrdinalIgnoreCase)
             .ToList();
     }
@@ -156,6 +173,36 @@ public static class CustomLevelStorage
     public static List<string> GetCustomLevelNames()
     {
         return LoadAll().Select(level => level.Name).ToList();
+    }
+
+    // Returns only user-saved level names (levels stored in custom-levels).
+    public static List<string> GetSavedLevelNames()
+    {
+        EnsureDirectory();
+
+        List<string> names = new List<string>();
+        if (!Directory.Exists(DirectoryPath)) return names;
+
+        foreach (string filePath in Directory.GetFiles(DirectoryPath, "*.json"))
+        {
+            try
+            {
+                string json = File.ReadAllText(filePath);
+                CustomLevelData? data = JsonSerializer.Deserialize<CustomLevelData>(json, JsonOptions);
+                string levelName = data?.Name ?? Path.GetFileNameWithoutExtension(filePath);
+                if (!string.IsNullOrWhiteSpace(levelName) && !names.Contains(levelName, StringComparer.OrdinalIgnoreCase))
+                {
+                    names.Add(levelName.Trim());
+                }
+            }
+            catch
+            {
+                // skip malformed files
+            }
+        }
+
+        names.Sort(StringComparer.OrdinalIgnoreCase);
+        return names;
     }
 
     public static bool DeleteByName(string levelName)

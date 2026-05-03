@@ -4,7 +4,6 @@ using Bliss.CSharp.Interact;
 using Bliss.CSharp.Interact.Keyboards;
 using Bliss.CSharp.Transformations;
 using Sparkle.CSharp.Graphics;
-using Sparkle.CSharp;
 using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.Overlays;
 using Veldrid;

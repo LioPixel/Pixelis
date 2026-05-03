@@ -59,7 +59,8 @@ public class LevelEditorBrowserGui : Gui
             menuBorderInsets: new BorderInsets(5),
             sliderBarBorderInsets: new BorderInsets(5));
 
-        List<string> savedLevels = CustomLevelStorage.GetCustomLevelNames();
+        // Only show user-saved levels in the editor browser. Shipped levels in content/levels are read-only.
+        List<string> savedLevels = CustomLevelStorage.GetSavedLevelNames();
         List<LabelData> options = savedLevels.Count > 0
             ? savedLevels.Select(level => new LabelData(ContentRegistry.Fontoe, level, 18)).ToList()
             : [new LabelData(ContentRegistry.Fontoe, "No Levels Yet", 18, color: Color.Gray)];

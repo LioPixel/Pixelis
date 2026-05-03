@@ -484,7 +484,8 @@ public class CustomLevelScene : LevelScene
             PlaceableType.BushDead,
             PlaceableType.RockWithGrass,
             PlaceableType.PlantFlowerRed,
-            PlaceableType.OakLog
+            PlaceableType.OakLog,
+            PlaceableType.Grass
         ];
     }
 
@@ -505,6 +506,7 @@ public class CustomLevelScene : LevelScene
             PlaceableType.RockWithGrass => "Rock Grass",
             PlaceableType.PlantFlowerRed => "Red Flower",
             PlaceableType.OakLog => "Oak Log",
+            PlaceableType.Grass => "Grass",
             _ => placeable.ToString()
         };
     }
@@ -763,6 +765,7 @@ public class CustomLevelScene : LevelScene
             PlaceableType.RockWithGrass => CreateDecorativeEntity(ContentRegistry.RockGrass, blockData.X, blockData.Y, 0F, layerDepth),
             PlaceableType.PlantFlowerRed => CreateDecorativeEntity(ContentRegistry.PlantFlowerRed, blockData.X, blockData.Y, 0F, layerDepth),
             PlaceableType.OakLog => CreateDecorativeEntity(ContentRegistry.OakLog, blockData.X, blockData.Y, 0F, layerDepth),
+            PlaceableType.Grass => CreateDecorativeEntity(ContentRegistry.Grass, blockData.X, blockData.Y, 0F, layerDepth),
             _ => CreateBlockEntity(blockData.X, blockData.Y, layerDepth)
         };
     }
@@ -821,7 +824,8 @@ public class CustomLevelScene : LevelScene
         BushDead,
         RockWithGrass,
         PlantFlowerRed,
-        OakLog
+        OakLog,
+        Grass
     }
 
     private sealed class PlacedObject

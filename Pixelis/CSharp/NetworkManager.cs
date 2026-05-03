@@ -6,7 +6,6 @@ using Pixelis.CSharp.GUIs;
 using Pixelis.CSharp.GUIs.Loading;
 using Pixelis.CSharp.Levels;
 using Pixelis.CSharp.Scenes;
-using Pixelis.CSharp.Scenes.Levels;
 using Riptide;
 using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.Scenes;
