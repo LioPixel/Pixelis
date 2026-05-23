@@ -18,7 +18,7 @@ using Sparkle.CSharp.Physics.Dim2;
 using Sparkle.CSharp.Physics.Dim2.Def;
 using Sparkle.CSharp.Physics.Dim2.Shapes;
 using Sparkle.CSharp.Scenes;
-using Veldrid;
+using Veldrith;
 using Transform = Bliss.CSharp.Transformations.Transform;
 
 namespace Pixelis.CSharp.Scenes;

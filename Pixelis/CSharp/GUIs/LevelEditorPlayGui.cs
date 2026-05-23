@@ -6,7 +6,7 @@ using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.GUI.Elements;
 using Sparkle.CSharp.GUI.Elements.Data;
-using Veldrid;
+using Veldrith;
 
 namespace Pixelis.CSharp.GUIs;
 
@@ -64,5 +64,10 @@ public class LevelEditorPlayGui : Gui
         float width = MathF.Floor(GlobalGraphicsAssets.Window.GetWidth() / scale) * scale;
         float height = MathF.Floor(GlobalGraphicsAssets.Window.GetHeight() / scale) * scale;
         return new Vector2(width, height);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        
     }
 }

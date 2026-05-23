@@ -12,7 +12,7 @@ using Sparkle.CSharp.GUI.Elements;
 using Sparkle.CSharp.GUI.Elements.Data;
 using Sparkle.CSharp.Scenes;
 using Sparkle.CSharp.Utils.Async;
-using Veldrid;
+using Veldrith;
 
 namespace Pixelis.CSharp.GUIs;
 
@@ -95,5 +95,9 @@ public class GameOverGui : Gui
         context.PrimitiveBatch.End();
         
         base.Draw(context, framebuffer);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
     }
 }

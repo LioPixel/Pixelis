@@ -8,7 +8,7 @@ using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.GUI.Elements;
 using Sparkle.CSharp.GUI.Elements.Data;
-using Veldrid;
+using Veldrith;
 using static Pixelis.CSharp.Scenes.CustomLevelScene;
 
 namespace Pixelis.CSharp.GUIs;
@@ -272,6 +272,7 @@ public class LevelEditorGui : Gui
             30,
             TextAlignment.Center,
             new Vector2(0, 1),
+            Vector2.One,
             (12, 12),
             new Vector2(320, 34),
             clickFunc: _ => true);
@@ -610,5 +611,10 @@ public class LevelEditorGui : Gui
         {
             _statusLabel.Data.Text = message;
         }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        
     }
 }

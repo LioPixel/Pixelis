@@ -2,7 +2,7 @@ using System.Numerics;
 using Bliss.CSharp.Colors;
 using Bliss.CSharp.Transformations;
 using Sparkle.CSharp.Graphics;
-using Veldrid;
+using Veldrith;
 
 namespace Pixelis.CSharp.GUIs;
 

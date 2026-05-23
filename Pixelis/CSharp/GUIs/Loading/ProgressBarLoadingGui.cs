@@ -8,7 +8,7 @@ using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.GUI.Elements;
 using Sparkle.CSharp.GUI.Elements.Data;
 using Sparkle.CSharp.GUI.Loading;
-using Veldrid;
+using Veldrith;
 
 namespace Pixelis.CSharp.GUIs.Loading;
 
@@ -73,5 +73,10 @@ public class ProgressBarLoadingGui : LoadingGui
         context.PrimitiveBatch.DrawFilledRectangle(new RectangleF(0, 0, GlobalGraphicsAssets.Window.GetWidth(), GlobalGraphicsAssets.Window.GetHeight()), color: new Color(128, 128, 128, 128));
         context.PrimitiveBatch.End();
         base.Draw(context, framebuffer);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        
     }
 }

@@ -13,7 +13,7 @@ using Sparkle.CSharp.GUI.Elements;
 using Sparkle.CSharp.GUI.Elements.Data;
 using Sparkle.CSharp.Overlays;
 using Sparkle.CSharp.Scenes;
-using Veldrid;
+using Veldrith;
 
 namespace Pixelis.CSharp.GUIs;
 
@@ -184,8 +184,6 @@ public class OptionsGui : Gui
                 GuiManager.Scale = roundedScale;
             }
         }
-        
-        base.Dispose(disposing);
     }
 
     private float GetMaxGuiScale()

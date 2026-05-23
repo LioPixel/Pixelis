@@ -12,7 +12,7 @@ using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.GUI.Elements;
 using Sparkle.CSharp.GUI.Elements.Data;
 using Sparkle.CSharp.Scenes;
-using Veldrid;
+using Veldrith;
 
 namespace Pixelis.CSharp.GUIs;
 
@@ -60,7 +60,7 @@ public class JoinGui : Gui
         LabelData ipadressTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, "", 18, hoverColor: Color.White);
         LabelData ipadressHintTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, "Type IP address...", 18, color: Color.Gray);
         
-        this.AddElement("IP-Adress-Text-Box", new TextureTextBoxElement(ipadressTextBoxData, ipadressTextBoxLabelData, ipadressHintTextBoxLabelData, Anchor.Center, new Vector2(0, -10), 40, TextAlignment.Center, new Vector2(0, 1), (12, 12), new Vector2(260, 30), rotation: 0, clickFunc: (element) => {
+        this.AddElement("IP-Adress-Text-Box", new TextureTextBoxElement(ipadressTextBoxData, ipadressTextBoxLabelData, ipadressHintTextBoxLabelData, Anchor.Center, new Vector2(0, -10), 40, TextAlignment.Center, new Vector2(0, 1), Vector2.One, (12, 12), new Vector2(260, 30), rotation: 0, clickFunc: (element) => {
             return true;
         }));
         
@@ -86,7 +86,7 @@ public class JoinGui : Gui
         LabelData nameTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, "", 18, hoverColor: Color.White);
         LabelData nameHintTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, "Type your name...", 18, color: Color.Gray);
         
-        this.AddElement("Name-Text-Box", new TextureTextBoxElement(nameTextBoxData, nameTextBoxLabelData, nameHintTextBoxLabelData, Anchor.Center, new Vector2(120, -120), 15, TextAlignment.Center, new Vector2(0, 1), (12, 12), new Vector2(230, 30), rotation: 0, clickFunc: (element) => {
+        this.AddElement("Name-Text-Box", new TextureTextBoxElement(nameTextBoxData, nameTextBoxLabelData, nameHintTextBoxLabelData, Anchor.Center, new Vector2(120, -120), 15, TextAlignment.Center, new Vector2(0, 1), Vector2.One, (12, 12), new Vector2(230, 30), rotation: 0, clickFunc: (element) => {
             return true;
         }));
 
@@ -169,7 +169,7 @@ public class JoinGui : Gui
     private void TryJoinServer()
     {
         // Get IP from text box
-        TextureTextBoxElement ipTextBox = (TextureTextBoxElement)this.GetElement("Texture-Text-Box");
+        TextureTextBoxElement ipTextBox = (TextureTextBoxElement)this.GetElement("IP-Adress-Text-Box");
         string ipAddress = ipTextBox.LabelData.Text.Trim();
         TryJoinServerWithAddress(string.IsNullOrWhiteSpace(ipAddress) ? "127.0.0.1:7777" : ipAddress);
     }
@@ -375,5 +375,10 @@ public class JoinGui : Gui
         context.PrimitiveBatch.End();
         
         base.Draw(context, framebuffer);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        
     }
 }

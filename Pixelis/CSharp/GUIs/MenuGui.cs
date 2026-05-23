@@ -14,7 +14,7 @@ using Sparkle.CSharp.GUI.Elements;
 using Sparkle.CSharp.GUI.Elements.Data;
 using Sparkle.CSharp.Scenes;
 using Sparkle.CSharp.Utils.Async;
-using Veldrid;
+using Veldrith;
 
 namespace Pixelis.CSharp.GUIs;
 
@@ -290,5 +290,10 @@ public class MenuGui : Gui
     private string BuildControlText()
     {
         return $"Controls:\n{KeyBindinds.GetMoveLeft()}: LEFT\n{KeyBindinds.GetMoveRight()}: RIGHT\n{KeyBindinds.GetJump()}: JUMP";
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        
     }
 }

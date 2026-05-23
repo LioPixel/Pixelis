@@ -14,7 +14,7 @@ using Sparkle.CSharp.GUI.Elements;
 using Sparkle.CSharp.GUI.Elements.Data;
 using Sparkle.CSharp.Scenes;
 using Sparkle.CSharp.Utils.Async;
-using Veldrid;
+using Veldrith;
 
 namespace Pixelis.CSharp.GUIs;
 
@@ -217,5 +217,10 @@ public class LevelEditorBrowserGui : Gui
         {
             labelElement.Data.Text = _statusMessage;
         }
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        
     }
 }

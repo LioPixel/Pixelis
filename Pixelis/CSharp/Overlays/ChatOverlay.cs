@@ -6,7 +6,7 @@ using Bliss.CSharp.Transformations;
 using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.Overlays;
-using Veldrid;
+using Veldrith;
 
 namespace Pixelis.CSharp.Overlays;
 

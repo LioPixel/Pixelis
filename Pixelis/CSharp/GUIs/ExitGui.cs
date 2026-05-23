@@ -11,7 +11,7 @@ using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.GUI.Elements;
 using Sparkle.CSharp.GUI.Elements.Data;
 using Sparkle.CSharp.Scenes;
-using Veldrid;
+using Veldrith;
 
 namespace Pixelis.CSharp.GUIs;
 
@@ -102,6 +102,5 @@ public class ExitGui : Gui
             }
         }
         
-        base.Dispose(disposing);
     }
 }

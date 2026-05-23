@@ -1,7 +1,7 @@
 ﻿using Pixelis.CSharp;
 using Sparkle.CSharp;
 using Sparkle.CSharp.GUI.Loading;
-using Veldrid;
+using Veldrith;
 
 GameSettings settings = new GameSettings()
 {
