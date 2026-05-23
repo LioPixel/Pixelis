@@ -12,4 +12,4 @@ GameSettings settings = new GameSettings()
 };
 
 using PixelisGame game = new PixelisGame(settings);
-game.Run(null, new LogoLoadingGui("Startup", "content/Sparkle/images/logo.png"));
+game.Run(null, new LogoLoadingGui("Startup", "content/sparkle/images/logo.png"));
