@@ -41,13 +41,13 @@ public class MenuGui : Gui
             new LabelElement(fullscreen, Anchor.BottomRight, new Vector2(0, 0), new Vector2(1.5F, 1.5F)));
         
         LabelData haveBug = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.main_menu.havebug"), 18, color: Color.White);
-        this.AddElement("HaveBug", new LabelElement(haveBug, Anchor.BottomRight, new Vector2(0, -670), new Vector2(1.2F, 1.2F)));
+        this.AddElement("HaveBug", new LabelElement(haveBug, Anchor.TopRight, new Vector2(-10, 10), new Vector2(1.2F, 1.2F)));
 
         // Options button.
         TextureButtonData mailButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         LabelData mailButtonLabelData = GuiText.ButtonLabel(Localization.T("gui.main_menu.mail"), 230);
 
-        this.AddElement("E-Mail-Button", new TextureButtonElement(mailButtonData, mailButtonLabelData, Anchor.BottomRight, new Vector2(-5, -630), size: new Vector2(160, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
+        this.AddElement("E-Mail-Button", new TextureButtonElement(mailButtonData, mailButtonLabelData, Anchor.TopRight, new Vector2(-10, 40), size: new Vector2(160, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
             {
                 Process.Start(new ProcessStartInfo
                 {
@@ -266,7 +266,7 @@ public class MenuGui : Gui
         // Discord button.
         TextureButtonData discordButtonData = new TextureButtonData(ContentRegistry.UiButton,hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         LabelData discordButtonLabelData = GuiText.ButtonLabel(Localization.T("common.discord"), 230);
-        this.AddElement("Discord-Button", new TextureButtonElement(discordButtonData, discordButtonLabelData, Anchor.Center, new Vector2(520, 300), size: new Vector2(200, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
+        this.AddElement("Discord-Button", new TextureButtonElement(discordButtonData, discordButtonLabelData, Anchor.BottomRight, new Vector2(-10, -30), size: new Vector2(200, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
         {
             Process.Start(new ProcessStartInfo
             {

@@ -17,6 +17,7 @@ namespace Pixelis.CSharp.GUIs;
 
 public class HostLeavedGui : Gui
 {
+    private static readonly Vector2 BaseWindowSize = ModalGuiRenderer.DefaultBaseSize;
 
     public HostLeavedGui() : base("HostLeaved")
     {
@@ -27,8 +28,8 @@ public class HostLeavedGui : Gui
     {
         base.Init();
 
-        LabelData hostleavedData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.host_left.message"), 18);
-        this.AddElement("host-leaved", new LabelElement(hostleavedData, Anchor.TopCenter, new Vector2(0, 200), new Vector2(3, 3)));
+        LabelData hostleavedData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.host_left.message"), 18, color: Color.White);
+        this.AddElement("host-leaved", new LabelElement(hostleavedData, Anchor.Center, new Vector2(0, -35), new Vector2(1.6F, 1.6F)));
         
         // Menu button.
         TextureButtonData menuButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
@@ -36,11 +37,12 @@ public class HostLeavedGui : Gui
         Vector2 menuButtonSize = GuiText.ButtonSize(menuText, 230, maxWidth: 320);
         LabelData menuButtonLabelData = GuiText.ButtonLabel(menuText, menuButtonSize.X);
         
-        this.AddElement("Menu-Button", new TextureButtonElement(menuButtonData, menuButtonLabelData, Anchor.Center, new Vector2(0, 60), size: menuButtonSize, textOffset: new Vector2(0, 1), clickFunc: (element) => {
+        this.AddElement("Menu-Button", new TextureButtonElement(menuButtonData, menuButtonLabelData, Anchor.Center, new Vector2(0, 68), size: menuButtonSize, textOffset: new Vector2(0, 1), clickFunc: (element) => {
             AsyncOperation operation = SceneManager.LoadSceneAsync(null, new ProgressBarLoadingGui("Loading", Localization.T("gui.loading.loading")));
 
             operation.Completed += success =>
             {
+                NetworkManager.Cleanup();
                 GuiManager.SetGui(new MenuGui());
             };
             return true;
@@ -50,6 +52,12 @@ public class HostLeavedGui : Gui
     protected override void Update(double delta)
     {
         base.Update(delta);
+
+        if (Input.IsKeyPressed(KeyboardKey.Escape))
+        {
+            NetworkManager.Cleanup();
+            GuiManager.SetGui(new MenuGui());
+        }
     }
 
     protected override void Draw(GraphicsContext context, Framebuffer framebuffer)
@@ -67,7 +75,7 @@ public class HostLeavedGui : Gui
             context.SpriteBatch.End();
         }
 
-        ModalGuiRenderer.DrawModalBackground(context, framebuffer, this.ScaleFactor, ModalGuiRenderer.DefaultBaseSize);
+        ModalGuiRenderer.DrawModalBackground(context, framebuffer, this.ScaleFactor, BaseWindowSize);
 
         base.Draw(context, framebuffer);
     }

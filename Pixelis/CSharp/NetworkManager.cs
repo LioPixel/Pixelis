@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Text;
 using Bliss.CSharp.Logging;
 using Bliss.CSharp.Transformations;
 using Pixelis.CSharp.Entities;
@@ -7,6 +8,7 @@ using Pixelis.CSharp.GUIs.Loading;
 using Pixelis.CSharp.Levels;
 using Pixelis.CSharp.Scenes;
 using Riptide;
+using Sparkle.CSharp;
 using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.Scenes;
 using AsyncOperation = Sparkle.CSharp.Utils.Async.AsyncOperation;
@@ -43,6 +45,7 @@ public static class NetworkManager
     // Connection callbacks
     private static Action? _onConnectionSuccess;
     private static Action<string>? _onConnectionFailed;
+    private static bool _isCleaningUp;
     public static event Action<string>? ChatMessageReceived;
     public static event Action? ChatClearedReceived;
     private static bool _chatInputBlocked;
@@ -57,7 +60,27 @@ public static class NetworkManager
     private const ushort ChatMessageId = 9;
     private const ushort ClearChatMessageId = 10;
     private const ushort PlayerDeathMessageId = 11;
+    private const ushort PingRequestMessageId = 12;
+    private const ushort PingResponseMessageId = 13;
+    private const ushort DirectedPingProbeMessageId = 14;
+    private const ushort DirectedPingAckMessageId = 15;
+    private const ushort DirectedPingResultMessageId = 16;
+    private const ushort DirectedPingRequestMessageId = 17;
+    private const ushort UsernameRejectedMessageId = 18;
+    private const ushort UsernameAcceptedMessageId = 19;
+    private const int MaxInlineLevelPayloadBytes = 900;
     private static readonly Dictionary<string, ChatCommandHandler> _chatCommands = new(StringComparer.OrdinalIgnoreCase);
+    private static int _nextPingToken = 1;
+    private static readonly Dictionary<int, DateTime> _pendingPingRequests = new();
+    private static int _pingAllRemaining;
+    private static float _pingAllTimer;
+    private static readonly HashSet<int> _pingAllTokens = new();
+    private static bool _suppressDisconnectGuiOnce;
+    private static string _reservedHostUsername = string.Empty;
+    private static string _pendingInitialLevelName = string.Empty;
+    private static string _pendingInitialLevelPayload = string.Empty;
+    private static Dictionary<ushort, string> _pendingInitialPlayers = new();
+    private static bool _hasPendingInitialData;
 
     static NetworkManager()
     {
@@ -69,6 +92,8 @@ public static class NetworkManager
         // Update server and client
         Server?.Update();
         Client?.Update();
+
+        UpdatePingAllLoop();
     }
 
     public static bool CreateDedicatedServer(ushort slots, string levelName, out string errorMessage)
@@ -77,6 +102,7 @@ public static class NetworkManager
         _currentLevel = levelName;
         _currentLevelPayload = CreateLevelPayload(levelName);
         _pendingUsername = string.Empty;
+        _reservedHostUsername = string.Empty;
 
         return TryStartServer(slots, out errorMessage);
     }
@@ -89,6 +115,9 @@ public static class NetworkManager
         
         // Store the host username so it can be used when the host client connects
         _pendingUsername = hostUsername;
+        _reservedHostUsername = string.IsNullOrWhiteSpace(hostUsername)
+            ? Localization.T("network.player.default_name")
+            : hostUsername.Trim();
 
         if (!TryStartServer(slots, out errorMessage))
         {
@@ -108,6 +137,13 @@ public static class NetworkManager
     private static bool TryStartServer(ushort slots, out string errorMessage)
     {
         errorMessage = string.Empty;
+
+        if ((Server != null && Server.IsRunning) || (Client != null && Client.IsConnected))
+        {
+            Logger.Warn("[SERVER] Detected existing network session before host start. Running cleanup first.");
+            Cleanup();
+        }
+
         NetworkedPlayers.Clear();
         PlayerUsernames.Clear();
         _announcedDisconnects.Clear();
@@ -137,9 +173,16 @@ public static class NetworkManager
         {
             Logger.Info($"[SERVER] Client {args.Client.Id} connected");
 
+            if (PlayerUsernames.Count == 0 && !string.IsNullOrWhiteSpace(_reservedHostUsername))
+            {
+                PlayerUsernames[args.Client.Id] = _reservedHostUsername;
+                Logger.Info($"[SERVER] Reserved host username '{_reservedHostUsername}' for client {args.Client.Id}");
+                _reservedHostUsername = string.Empty;
+            }
+
             Message message = Message.Create(MessageSendMode.Reliable, InitialConnectionMessageId);
             message.AddString(_currentLevel);
-            message.AddString(_currentLevelPayload);
+            message.AddString(GetTransmittableLevelPayload(_currentLevelPayload, "initial connection"));
             message.AddUShort(args.Client.Id);
 
             List<ushort> existingPlayerIds = GetRegisteredServerPlayerIds(args.Client.Id);
@@ -160,10 +203,25 @@ public static class NetworkManager
         {
             Logger.Info($"[SERVER] Client {args.Client.Id} disconnected - preparing despawn");
 
-            BroadcastLeaveIfNeeded(args.Client.Id);
+            bool wasAuthenticatedPlayer = PlayerUsernames.ContainsKey(args.Client.Id);
+            if (wasAuthenticatedPlayer)
+            {
+                BroadcastLeaveIfNeeded(args.Client.Id);
+            }
+
+            if (NetworkedPlayers.TryGetValue(args.Client.Id, out Player? disconnectedPlayer))
+            {
+                SceneManager.ActiveScene?.RemoveEntity(disconnectedPlayer);
+            }
 
             NetworkedPlayers.Remove(args.Client.Id);
             PlayerUsernames.Remove(args.Client.Id);
+
+            if (!wasAuthenticatedPlayer)
+            {
+                Logger.Info($"[SERVER] Client {args.Client.Id} disconnected before authentication - skipping leave/despawn broadcast");
+                return;
+            }
 
             Message despawnMessage = Message.Create(MessageSendMode.Reliable, DespawnPlayerMessageId);
             despawnMessage.AddUShort(args.Client.Id);
@@ -205,11 +263,26 @@ public static class NetworkManager
             case PlayerDeathMessageId: // Player death notification
                 HandlePlayerDeathMessage(e.FromConnection.Id);
                 break;
+            case PingRequestMessageId: // Ping request from client
+                HandleClientPingRequest(e.Message, e.FromConnection.Id);
+                break;
+            case DirectedPingAckMessageId: // Directed ping ack from target
+                HandleDirectedPingAck(e.Message, e.FromConnection.Id);
+                break;
+            case DirectedPingRequestMessageId: // Directed ping request from requester
+                HandleDirectedPingRequest(e.Message, e.FromConnection.Id);
+                break;
         }
     }
 
     private static void HandleClientChatMessage(Message message, ushort fromClientId)
     {
+        if (!PlayerUsernames.ContainsKey(fromClientId))
+        {
+            Logger.Warn($"[SERVER] Ignored chat from unauthenticated client {fromClientId}");
+            return;
+        }
+
         string chatText = message.GetString();
         string username = PlayerUsernames.TryGetValue(fromClientId, out string? name) ? name : $"{Localization.T("network.player.default_name")} {fromClientId}";
         string fullMessage = $"{username}: {chatText}";
@@ -237,13 +310,30 @@ public static class NetworkManager
     // Handle username message from client
     private static void HandleClientUsernameMessage(Message message, ushort fromClientId)
     {
-        string username = message.GetString();
+        string requestedUsername = message.GetString();
+        string username = string.IsNullOrWhiteSpace(requestedUsername)
+            ? Localization.T("network.player.default_name")
+            : requestedUsername.Trim();
+
+        if (IsUsernameTaken(username, fromClientId))
+        {
+            Logger.Warn($"[SERVER] Username '{username}' rejected for client {fromClientId} (already taken)");
+
+            Message rejectedMessage = Message.Create(MessageSendMode.Reliable, UsernameRejectedMessageId);
+            rejectedMessage.AddString($"Name '{username}' ist bereits vergeben.");
+            Server?.Send(rejectedMessage, fromClientId);
+            Server?.DisconnectClient(fromClientId);
+            return;
+        }
         
-        Logger.Info($"[SERVER] Received username '{username}' from client {fromClientId}");
+        Logger.Info($"[SERVER] Received username '{requestedUsername}' from client {fromClientId} -> assigned '{username}'");
         
         // Store the username
         PlayerUsernames[fromClientId] = username;
         _announcedDisconnects.Remove(fromClientId);
+
+        Message acceptedMessage = Message.Create(MessageSendMode.Reliable, UsernameAcceptedMessageId);
+        Server?.Send(acceptedMessage, fromClientId);
         
         // Now notify all other clients about the new player with their username
         Message spawnMessage = Message.Create(MessageSendMode.Reliable, SpawnPlayerMessageId);
@@ -258,14 +348,70 @@ public static class NetworkManager
 
     private static void HandlePlayerDeathMessage(ushort fromClientId)
     {
+        if (!PlayerUsernames.ContainsKey(fromClientId))
+        {
+            Logger.Warn($"[SERVER] Ignored death message from unauthenticated client {fromClientId}");
+            return;
+        }
+
         string username = PlayerUsernames.TryGetValue(fromClientId, out string? name) ? name : $"{Localization.T("network.player.default_name")} {fromClientId}";
         Logger.Info($"[SERVER] Death notification from {fromClientId} ({username})");
         BroadcastSystemChatMessage(Localization.F("chat.system.player_died", username));
+    }
+
+    private static void HandleClientPingRequest(Message message, ushort fromClientId)
+    {
+        int token = message.GetInt();
+
+        Message response = Message.Create(MessageSendMode.Reliable, PingResponseMessageId);
+        response.AddInt(token);
+        Server?.Send(response, fromClientId);
+    }
+
+    private static void HandleDirectedPingAck(Message message, ushort fromClientId)
+    {
+        ushort requesterId = message.GetUShort();
+        int token = message.GetInt();
+
+        string targetName = PlayerUsernames.TryGetValue(fromClientId, out string? name)
+            ? name
+            : $"{Localization.T("network.player.default_name")} {fromClientId}";
+
+        Message result = Message.Create(MessageSendMode.Reliable, DirectedPingResultMessageId);
+        result.AddInt(token);
+        result.AddString(targetName);
+        Server?.Send(result, requesterId);
+    }
+
+    private static void HandleDirectedPingRequest(Message message, ushort requesterId)
+    {
+        ushort targetClientId = message.GetUShort();
+        int token = message.GetInt();
+
+        if (targetClientId == requesterId)
+        {
+            Message selfResult = Message.Create(MessageSendMode.Reliable, DirectedPingResultMessageId);
+            selfResult.AddInt(token);
+            selfResult.AddString(Localization.T("network.player.local"));
+            Server?.Send(selfResult, requesterId);
+            return;
+        }
+
+        Message probe = Message.Create(MessageSendMode.Reliable, DirectedPingProbeMessageId);
+        probe.AddUShort(requesterId);
+        probe.AddInt(token);
+        Server?.Send(probe, targetClientId);
     }
     
     // Handle level completion from a client
     private static void HandleLevelCompletion(Message message, ushort fromClientId)
     {
+        if (!PlayerUsernames.ContainsKey(fromClientId))
+        {
+            Logger.Warn($"[SERVER] Ignored level completion from unauthenticated client {fromClientId}");
+            return;
+        }
+
         string nextLevel = message.GetString();
         
         Logger.Info($"[SERVER] Player {fromClientId} completed level, transitioning all players to {nextLevel}");
@@ -278,9 +424,9 @@ public static class NetworkManager
         Logger.Info($"[SERVER] Current players before transition: {string.Join(", ", connectedPlayers)}");
         
         // Send level transition message to ALL clients
-        Message levelTransitionMessage = Message.Create(MessageSendMode.Reliable, 7);
+        Message levelTransitionMessage = Message.Create(MessageSendMode.Reliable, LevelTransitionMessageId);
         levelTransitionMessage.AddString(_currentLevel);
-        levelTransitionMessage.AddString(_currentLevelPayload);
+        levelTransitionMessage.AddString(GetTransmittableLevelPayload(_currentLevelPayload, "level transition"));
         Server.SendToAll(levelTransitionMessage);
         
         // Force server update to ensure message is sent
@@ -297,12 +443,9 @@ public static class NetworkManager
         
         Logger.Info($"[SERVER] Client {fromClientId} (Player {playerId}) requested disconnect");
         
-        foreach (var valuePair in NetworkedPlayers)
+        if (NetworkedPlayers.TryGetValue(playerId, out Player? playerToRemoveFromServerScene))
         {
-            if (valuePair.Key == playerId)
-            {
-                SceneManager.ActiveScene?.RemoveEntity(valuePair.Value);
-            }
+            SceneManager.ActiveScene?.RemoveEntity(playerToRemoveFromServerScene);
         }
         
         // Remove from server's player list
@@ -311,7 +454,7 @@ public static class NetworkManager
         PlayerUsernames.Remove(playerId);
         
         // Notify ALL OTHER clients to remove this player
-        Message despawnMessage = Message.Create(MessageSendMode.Reliable, 4);
+        Message despawnMessage = Message.Create(MessageSendMode.Reliable, DespawnPlayerMessageId);
         despawnMessage.AddUShort(playerId);
         
         // Send to all clients EXCEPT the one disconnecting
@@ -350,6 +493,21 @@ public static class NetworkManager
                 break;
             case ClearChatMessageId: // Clear chat
                 HandleClearChat();
+                break;
+            case PingResponseMessageId: // Ping response
+                HandlePingResponse(e.Message);
+                break;
+            case DirectedPingProbeMessageId: // Directed ping probe from server
+                HandleDirectedPingProbe(e.Message);
+                break;
+            case DirectedPingResultMessageId: // Directed ping result from server
+                HandleDirectedPingResult(e.Message);
+                break;
+            case UsernameRejectedMessageId: // Username rejected by server
+                HandleUsernameRejected(e.Message);
+                break;
+            case UsernameAcceptedMessageId: // Username accepted by server
+                HandleUsernameAccepted();
                 break;
             default:
                 Logger.Warn($"[CLIENT] Unknown message ID: {messageId}");
@@ -434,6 +592,12 @@ public static class NetworkManager
     
     private static void HandleServerPositionUpdate(Message message, ushort fromClientId)
     {
+        if (!PlayerUsernames.ContainsKey(fromClientId))
+        {
+            Logger.Warn($"[SERVER] Ignored position update from unauthenticated client {fromClientId}");
+            return;
+        }
+
         ushort playerId = message.GetUShort();
         float x = message.GetFloat();
         float y = message.GetFloat();
@@ -443,7 +607,7 @@ public static class NetworkManager
         //Logger.Info($"[SERVER] Received position from client {fromClientId}: Player {playerId} at ({x:F2}, {y:F2})");
         
         // Broadcast to all OTHER clients
-        Message broadcastMessage = Message.Create(MessageSendMode.Unreliable, 2);
+        Message broadcastMessage = Message.Create(MessageSendMode.Unreliable, PositionUpdateMessageId);
         broadcastMessage.AddUShort(playerId);
         broadcastMessage.AddFloat(x);
         broadcastMessage.AddFloat(y);
@@ -486,13 +650,6 @@ public static class NetworkManager
     private static void OnClientConnected(object sender, EventArgs e)
     {
         Logger.Info("[CLIENT] Successfully connected to server!");
-        
-        // Call success callback if set
-        _onConnectionSuccess?.Invoke();
-        
-        // Clear callbacks after use
-        _onConnectionSuccess = null;
-        _onConnectionFailed = null;
     }
     
     private static void OnClientConnectionFailed(object sender, EventArgs e)
@@ -510,6 +667,18 @@ public static class NetworkManager
     private static void OnClientDisconnected(object sender, DisconnectedEventArgs e)
     {
         Logger.Warn($"[CLIENT] Disconnected from server! Reason: {e.Reason}");
+
+        if (_suppressDisconnectGuiOnce)
+        {
+            _suppressDisconnectGuiOnce = false;
+            return;
+        }
+
+        if (_isCleaningUp)
+        {
+            Logger.Info("[CLIENT] Ignoring disconnect GUI during cleanup");
+            return;
+        }
         
         // Don't show disconnect GUI during level transitions
         if (_isLevelTransition)
@@ -526,81 +695,124 @@ public static class NetworkManager
         NetworkedPlayers.Clear();
         PlayerUsernames.Clear();
         _announcedDisconnects.Clear();
+        _pendingPingRequests.Clear();
+        _pingAllRemaining = 0;
+        _pingAllTimer = 0.0F;
+        _pingAllTokens.Clear();
+        _hasPendingInitialData = false;
+        _pendingInitialLevelName = string.Empty;
+        _pendingInitialLevelPayload = string.Empty;
+        _pendingInitialPlayers.Clear();
      
         GuiManager.SetGui(new HostLeavedGui());
     }
     
     public static void Cleanup()
     {
-        Logger.Info("[NETWORK] Starting cleanup...");
-        
-        // If we're a client (not hosting), send disconnect message BEFORE actually disconnecting
-        if (Client != null && Client.IsConnected && (Server == null || !Server.IsRunning))
+        if (_isCleaningUp)
         {
-            Logger.Info("[NETWORK] Client sending disconnect message to server");
-            
-            // Send explicit disconnect message to server
-            Message disconnectMessage = Message.Create(MessageSendMode.Reliable, ClientDisconnectMessageId);
-            disconnectMessage.AddUShort(LocalPlayerId);
-            Client.Send(disconnectMessage);
-            
-            // Give time for the message to be sent
-            System.Threading.Thread.Sleep(200);
-            
-            Logger.Info("[NETWORK] Client disconnecting from server");
-            Client.Disconnect();
-            
-            // Give the disconnect message time to be processed
-            System.Threading.Thread.Sleep(200);
+            return;
         }
-        
-        // If we're hosting, we need to handle this carefully
-        if (Server != null && Server.IsRunning)
+
+        _isCleaningUp = true;
+        try
         {
-            // First, send disconnect message from our own client
-            if (Client != null && Client.IsConnected)
+            Logger.Info("[NETWORK] Starting cleanup...");
+            
+            // If we're a client (not hosting), send disconnect message BEFORE actually disconnecting
+            if (Client != null && Client.IsConnected && (Server == null || !Server.IsRunning))
             {
-                Logger.Info("[NETWORK] Host client sending disconnect message");
-                
-                // Send explicit disconnect message
+                Logger.Info("[NETWORK] Client sending disconnect message to server");
+            
+                // Send explicit disconnect message to server
                 Message disconnectMessage = Message.Create(MessageSendMode.Reliable, ClientDisconnectMessageId);
                 disconnectMessage.AddUShort(LocalPlayerId);
                 Client.Send(disconnectMessage);
-                
-                // Give time for message to be sent
+            
+                // Give time for the message to be sent
                 System.Threading.Thread.Sleep(200);
-                
-                Logger.Info("[NETWORK] Host client disconnecting from own server");
+            
+                Logger.Info("[NETWORK] Client disconnecting from server");
                 Client.Disconnect();
-                
-                // Process the disconnect on the server side
-                Server.Update();
-                
-                // Give time for the despawn message to be sent to other clients
+            
+                // Give the disconnect message time to be processed
                 System.Threading.Thread.Sleep(200);
-                
-                // Force one more server update to ensure all messages are sent
-                Server.Update();
-                System.Threading.Thread.Sleep(100);
-                
+
+                Client.Connected -= OnClientConnected;
+                Client.ConnectionFailed -= OnClientConnectionFailed;
+                Client.Disconnected -= OnClientDisconnected;
+                Client.MessageReceived -= HandleClientMessageReceived;
                 Client = null;
             }
+        
+            // If we're hosting, we need to handle this carefully
+            if (Server != null && Server.IsRunning)
+            {
+                // First, send disconnect message from our own client
+                if (Client != null && Client.IsConnected)
+                {
+                    Logger.Info("[NETWORK] Host client sending disconnect message");
+                
+                    // Send explicit disconnect message
+                    Message disconnectMessage = Message.Create(MessageSendMode.Reliable, ClientDisconnectMessageId);
+                    disconnectMessage.AddUShort(LocalPlayerId);
+                    Client.Send(disconnectMessage);
+                
+                    // Give time for message to be sent
+                    System.Threading.Thread.Sleep(200);
+                
+                    Logger.Info("[NETWORK] Host client disconnecting from own server");
+                    Client.Disconnect();
+                
+                    // Process the disconnect on the server side
+                    Server.Update();
+                
+                    // Give time for the despawn message to be sent to other clients
+                    System.Threading.Thread.Sleep(200);
+                
+                    // Force one more server update to ensure all messages are sent
+                    Server.Update();
+                    System.Threading.Thread.Sleep(100);
+                
+                    Client.Connected -= OnClientConnected;
+                    Client.ConnectionFailed -= OnClientConnectionFailed;
+                    Client.Disconnected -= OnClientDisconnected;
+                    Client.MessageReceived -= HandleClientMessageReceived;
+                    Client = null;
+                }
             
-            Logger.Info("[NETWORK] Stopping server - this will disconnect all remaining clients");
-            Server.Stop();
-            Server = null;
-        }
+                Logger.Info("[NETWORK] Stopping server - this will disconnect all remaining clients");
+                Server.Stop();
+                Server = null;
+            }
         
-        // Clean up all networked players
-        foreach (var player in NetworkedPlayers.Values)
+            // Clean up all networked players
+            foreach (var player in NetworkedPlayers.Values)
+            {
+                SceneManager.ActiveScene?.RemoveEntity(player);
+            }
+        
+            NetworkedPlayers.Clear();
+            PlayerUsernames.Clear();
+            _announcedDisconnects.Clear();
+            _pendingPingRequests.Clear();
+            _pingAllRemaining = 0;
+            _pingAllTimer = 0.0F;
+            _pingAllTokens.Clear();
+            _hasPendingInitialData = false;
+            _pendingInitialLevelName = string.Empty;
+            _pendingInitialLevelPayload = string.Empty;
+            _pendingInitialPlayers.Clear();
+            _chatInputBlocked = false;
+            _pendingUsername = string.Empty;
+            ChatClearedReceived?.Invoke();
+        
+            Logger.Info("[NETWORK] Full cleanup completed");
+        }
+        finally
         {
-            SceneManager.ActiveScene?.RemoveEntity(player);
+            _isCleaningUp = false;
         }
-        
-        NetworkedPlayers.Clear();
-        PlayerUsernames.Clear();
-        
-        Logger.Info("[NETWORK] Full cleanup completed");
     }
     
     // Message 1: Initial connection - receive scene and player ID
@@ -638,7 +850,14 @@ public static class NetworkManager
         }
         
         Logger.Info($"[CLIENT] Existing players: {existingPlayerCount}");
+        _pendingInitialLevelName = levelName;
+        _pendingInitialLevelPayload = levelPayload;
+        _pendingInitialPlayers = existingPlayersWithUsernames;
+        _hasPendingInitialData = true;
+    }
 
+    private static void StartInitialConnectionLoad(string levelName, string levelPayload, Dictionary<ushort, string> existingPlayersWithUsernames)
+    {
         AsyncOperation? operation = null;
 
         Scene? initialScene = CreateNetworkScene(levelName, levelPayload);
@@ -657,14 +876,12 @@ public static class NetworkManager
             {
                 Logger.Info("[CLIENT] Scene loaded, creating players...");
             
-                // Create local player with username
                 Player localPlayer = new Player(new Transform() { Translation = new Vector3(0, -16 * 2, 0) }, true, _pendingUsername);
                 SceneManager.ActiveScene.AddEntity(localPlayer);
                 NetworkedPlayers[LocalPlayerId] = localPlayer;
             
                 Logger.Info($"[CLIENT] Created local player with ID {LocalPlayerId} ({_pendingUsername})");
             
-                // Create existing remote players with usernames
                 foreach (var kvp in existingPlayersWithUsernames)
                 {
                     Player remotePlayer = new Player(new Transform() { Translation = new Vector3(0, -16 * 2, 0) }, false, kvp.Value);
@@ -762,6 +979,8 @@ public static class NetworkManager
         {
             Logger.Warn($"[DESPAWN] Player {playerId} not found in NetworkedPlayers dictionary");
         }
+
+        RemoveOrphanRemotePlayersFromScene();
     }
 
     private static void HandleChatMessage(Message message)
@@ -775,9 +994,111 @@ public static class NetworkManager
         ChatClearedReceived?.Invoke();
     }
 
+    private static void HandlePingResponse(Message message)
+    {
+        int token = message.GetInt();
+
+        if (!_pendingPingRequests.TryGetValue(token, out DateTime sentAt))
+        {
+            return;
+        }
+
+        _pendingPingRequests.Remove(token);
+        double pingMs = (DateTime.UtcNow - sentAt).TotalMilliseconds;
+        ChatMessageReceived?.Invoke($"Ping: {Math.Round(pingMs)} ms");
+
+        if (_pingAllTokens.Remove(token) && _pingAllRemaining == 0 && _pingAllTokens.Count == 0)
+        {
+            ChatMessageReceived?.Invoke("PingAll beendet.");
+        }
+    }
+
+    private static void HandleDirectedPingProbe(Message message)
+    {
+        ushort requesterId = message.GetUShort();
+        int token = message.GetInt();
+
+        if (Client == null || !Client.IsConnected)
+        {
+            return;
+        }
+
+        Message ack = Message.Create(MessageSendMode.Reliable, DirectedPingAckMessageId);
+        ack.AddUShort(requesterId);
+        ack.AddInt(token);
+        Client.Send(ack);
+    }
+
+    private static void HandleDirectedPingResult(Message message)
+    {
+        int token = message.GetInt();
+        string targetName = message.GetString();
+
+        if (!_pendingPingRequests.TryGetValue(token, out DateTime sentAt))
+        {
+            return;
+        }
+
+        _pendingPingRequests.Remove(token);
+        double pingMs = (DateTime.UtcNow - sentAt).TotalMilliseconds;
+        ChatMessageReceived?.Invoke($"Ping zu {targetName}: {Math.Round(pingMs)} ms");
+    }
+
+    private static void HandleUsernameRejected(Message message)
+    {
+        string reason = message.GetString();
+        _hasPendingInitialData = false;
+        _pendingInitialLevelName = string.Empty;
+        _pendingInitialLevelPayload = string.Empty;
+        _pendingInitialPlayers.Clear();
+
+        _onConnectionFailed?.Invoke(reason);
+        _onConnectionSuccess = null;
+        _onConnectionFailed = null;
+
+        if (Client != null && Client.IsConnected)
+        {
+            _suppressDisconnectGuiOnce = true;
+            Client.Disconnect();
+        }
+    }
+
+    private static void HandleUsernameAccepted()
+    {
+        _onConnectionSuccess?.Invoke();
+        _onConnectionSuccess = null;
+        _onConnectionFailed = null;
+
+        if (_hasPendingInitialData)
+        {
+            StartInitialConnectionLoad(_pendingInitialLevelName, _pendingInitialLevelPayload, _pendingInitialPlayers);
+            _hasPendingInitialData = false;
+            _pendingInitialLevelName = string.Empty;
+            _pendingInitialLevelPayload = string.Empty;
+            _pendingInitialPlayers = new Dictionary<ushort, string>();
+        }
+    }
+
     private static string CreateLevelPayload(string levelName)
     {
         return CustomLevelStorage.ExportLevelPayload(levelName) ?? string.Empty;
+    }
+
+    private static string GetTransmittableLevelPayload(string payload, string context)
+    {
+        if (string.IsNullOrEmpty(payload))
+        {
+            return string.Empty;
+        }
+
+        int payloadBytes = Encoding.UTF8.GetByteCount(payload);
+        if (payloadBytes <= MaxInlineLevelPayloadBytes)
+        {
+            return payload;
+        }
+
+        Logger.Warn($"[NETWORK] Skipping inline level payload for {context}: {payloadBytes} bytes exceeds safe limit ({MaxInlineLevelPayloadBytes} bytes).");
+        return string.Empty;
     }
 
     private static Scene? CreateNetworkScene(string levelName, string levelPayload)
@@ -928,12 +1249,47 @@ public static class NetworkManager
         BroadcastSystemChatMessage(Localization.F("chat.system.player_left", username));
     }
 
+    private static void RemoveOrphanRemotePlayersFromScene()
+    {
+        if (SceneManager.ActiveScene == null)
+        {
+            return;
+        }
+
+        List<Player> allPlayers = SceneManager.ActiveScene
+            .GetEntitiesWithTag("player")
+            .OfType<Player>()
+            .ToList();
+
+        HashSet<Player> trackedPlayers = NetworkedPlayers.Values.ToHashSet();
+
+        foreach (Player player in allPlayers)
+        {
+            if (!player.IsLocalPlayer && !trackedPlayers.Contains(player))
+            {
+                try
+                {
+                    SceneManager.ActiveScene.RemoveEntity(player);
+                    Logger.Warn($"[DESPAWN] Removed orphan remote player entity: {player.UserName}");
+                }
+                catch (Exception ex)
+                {
+                    Logger.Warn($"[DESPAWN] Skipped orphan cleanup for player {player.UserName}: {ex.Message}");
+                }
+            }
+        }
+    }
+
     private static void RegisterChatCommands()
     {
         _chatCommands.Clear();
 
         // Add new chat commands here.
         RegisterChatCommand("clear", HandleClearCommand);
+        RegisterChatCommand("ping", HandlePingCommand);
+        RegisterChatCommand("pingall", HandlePingAllCommand);
+        RegisterChatCommand("pingid", HandlePingIdCommand);
+        RegisterChatCommand("players", HandlePlayersCommand);
     }
 
     private static void RegisterChatCommand(string name, ChatCommandHandler handler)
@@ -987,5 +1343,192 @@ public static class NetworkManager
         }
 
         ChatMessageReceived?.Invoke(Localization.T("chat.command.host_only"));
+    }
+
+    private static void HandlePingCommand(string[] args)
+    {
+        if (Client == null || !Client.IsConnected)
+        {
+            ChatMessageReceived?.Invoke("Ping: offline");
+            return;
+        }
+
+        if (args.Length > 0)
+        {
+            string targetInput = string.Join(" ", args).Trim();
+            if (string.IsNullOrWhiteSpace(targetInput))
+            {
+                ChatMessageReceived?.Invoke("Usage: /ping <name>");
+                return;
+            }
+
+            ushort? targetClientId = ResolvePlayerIdByName(targetInput);
+            if (!targetClientId.HasValue)
+            {
+                ChatMessageReceived?.Invoke($"Spieler nicht gefunden: {targetInput}");
+                return;
+            }
+
+            if (targetClientId.Value == LocalPlayerId)
+            {
+                ChatMessageReceived?.Invoke("Du kannst dich nicht selbst anpingen.");
+                return;
+            }
+
+            SendDirectedPing(targetClientId.Value);
+            return;
+        }
+
+        SendStandardPing();
+    }
+
+    private static void HandlePingIdCommand(string[] args)
+    {
+        if (Client == null || !Client.IsConnected)
+        {
+            ChatMessageReceived?.Invoke("Ping: offline");
+            return;
+        }
+
+        if (args.Length < 1 || !ushort.TryParse(args[0], out ushort targetClientId))
+        {
+            ChatMessageReceived?.Invoke("Usage: /pingid <player id>");
+            return;
+        }
+
+        if (!PlayerUsernames.ContainsKey(targetClientId))
+        {
+            ChatMessageReceived?.Invoke($"Spieler-ID nicht gefunden: {targetClientId}");
+            return;
+        }
+
+        if (targetClientId == LocalPlayerId)
+        {
+            ChatMessageReceived?.Invoke("Du kannst dich nicht selbst anpingen.");
+            return;
+        }
+
+        SendDirectedPing(targetClientId);
+    }
+
+    private static void HandlePingAllCommand(string[] args)
+    {
+        if (Client == null || !Client.IsConnected)
+        {
+            ChatMessageReceived?.Invoke("Ping: offline");
+            return;
+        }
+
+        _pingAllRemaining = 5;
+        _pingAllTimer = 0.0F;
+        _pingAllTokens.Clear();
+        ChatMessageReceived?.Invoke("PingAll gestartet (5x)...");
+    }
+
+    private static void HandlePlayersCommand(string[] args)
+    {
+        if (PlayerUsernames.Count == 0)
+        {
+            ChatMessageReceived?.Invoke("Keine Spieler verbunden.");
+            return;
+        }
+
+        IEnumerable<string> players = PlayerUsernames
+            .OrderBy(kvp => kvp.Key)
+            .Select(kvp => $"{kvp.Value} [{kvp.Key}]");
+
+        ChatMessageReceived?.Invoke($"Spieler ({PlayerUsernames.Count}): {string.Join(", ", players)}");
+    }
+
+    private static void UpdatePingAllLoop()
+    {
+        if (_pingAllRemaining <= 0)
+        {
+            return;
+        }
+
+        if (Client == null || !Client.IsConnected)
+        {
+            _pingAllRemaining = 0;
+            return;
+        }
+
+        _pingAllTimer -= (float)Time.Delta;
+        if (_pingAllTimer > 0)
+        {
+            return;
+        }
+
+        _pingAllTimer = 1.0F;
+        int token = SendStandardPing();
+        _pingAllTokens.Add(token);
+        _pingAllRemaining--;
+    }
+
+    private static int SendStandardPing()
+    {
+        int token = _nextPingToken++;
+        if (_nextPingToken == int.MaxValue)
+        {
+            _nextPingToken = 1;
+        }
+
+        _pendingPingRequests[token] = DateTime.UtcNow;
+
+        Message pingRequest = Message.Create(MessageSendMode.Reliable, PingRequestMessageId);
+        pingRequest.AddInt(token);
+        Client.Send(pingRequest);
+        return token;
+    }
+
+    private static void SendDirectedPing(ushort targetClientId)
+    {
+        int directedToken = NextPingToken();
+        _pendingPingRequests[directedToken] = DateTime.UtcNow;
+
+        Message request = Message.Create(MessageSendMode.Reliable, DirectedPingRequestMessageId);
+        request.AddUShort(targetClientId);
+        request.AddInt(directedToken);
+        Client?.Send(request);
+    }
+
+    private static int NextPingToken()
+    {
+        int token = _nextPingToken++;
+        if (_nextPingToken == int.MaxValue)
+        {
+            _nextPingToken = 1;
+        }
+
+        return token;
+    }
+
+    private static ushort? ResolvePlayerIdByName(string input)
+    {
+        string normalizedInput = input.Trim();
+
+        foreach (KeyValuePair<ushort, string> kvp in PlayerUsernames)
+        {
+            if (string.Equals(kvp.Value, normalizedInput, StringComparison.OrdinalIgnoreCase))
+            {
+                return kvp.Key;
+            }
+        }
+
+        foreach (KeyValuePair<ushort, string> kvp in PlayerUsernames)
+        {
+            if (kvp.Value.Contains(normalizedInput, StringComparison.OrdinalIgnoreCase))
+            {
+                return kvp.Key;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsUsernameTaken(string candidate, ushort clientId)
+    {
+        return PlayerUsernames.Any(kvp =>
+            kvp.Key != clientId && string.Equals(kvp.Value, candidate, StringComparison.OrdinalIgnoreCase));
     }
 }

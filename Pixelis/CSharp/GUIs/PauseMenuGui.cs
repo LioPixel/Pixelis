@@ -42,6 +42,7 @@ public class PauseMenuGui : Gui
         LabelData menuButtonLabelData = GuiText.ButtonLabel(Localization.T("common.menu"), 230);
         
         this.AddElement("Exit-Button", new TextureButtonElement(menuButtonData, menuButtonLabelData, Anchor.Center, new Vector2(0, 0), size: new Vector2(230, 40), textOffset: new Vector2(0, 1), clickFunc: (element) => {
+            NetworkManager.Cleanup();
             AsyncOperation operation = SceneManager.LoadSceneAsync(null, new ProgressBarLoadingGui("Loading", Localization.T("gui.loading.loading")));
 
             operation.Completed += success =>
