@@ -31,7 +31,7 @@ public class LevelEditorPlayGui : Gui
 
         this.AddElement("Editor-Button", new TextureButtonElement(
             buttonData,
-            new LabelData(ContentRegistry.Fontoe, "Editor", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel(Localization.T("gui.level_editor.editor"), 150),
             Anchor.TopRight,
             new Vector2(-20, 20),
             size: new Vector2(150, 40),

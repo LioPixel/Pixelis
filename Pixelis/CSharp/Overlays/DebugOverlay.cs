@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Bliss.CSharp.Colors;
 using Bliss.CSharp.Interact;
 using Bliss.CSharp.Transformations;
@@ -45,14 +45,14 @@ public class DebugOverlay : Overlay
         
         
             context.SpriteBatch.Begin(context.CommandList, framebuffer.OutputDescription);
-            context.SpriteBatch.DrawText(ContentRegistry.Fontoe, $"POS: {mouseBlock}", mousePos, 18, color: Color.Black);
+            context.SpriteBatch.DrawText(ContentRegistry.Fontoe, $"{Localization.T("overlay.debug.position")}: {mouseBlock}", mousePos, 18, color: Color.Black);
             context.SpriteBatch.End();
 
         }
         
         context.SpriteBatch.Begin(context.CommandList, framebuffer.OutputDescription);
-        context.SpriteBatch.DrawText(ContentRegistry.Fontoe, $"FPS: {this.GetFps()}", new Vector2(5, 5), 18, color: Color.LightGray);
-        context.SpriteBatch.DrawText(ContentRegistry.Fontoe, $"LEVEL NAME: {SceneManager.ActiveScene?.Name}", new Vector2(5, 25), 18, color: Color.LightGray);
+        context.SpriteBatch.DrawText(ContentRegistry.Fontoe, $"{Localization.T("overlay.debug.fps")}: {this.GetFps()}", new Vector2(5, 5), 18, color: Color.LightGray);
+        context.SpriteBatch.DrawText(ContentRegistry.Fontoe, $"{Localization.T("overlay.debug.level_name")}: {SceneManager.ActiveScene?.Name}", new Vector2(5, 25), 18, color: Color.LightGray);
         context.SpriteBatch.End();
     }
 

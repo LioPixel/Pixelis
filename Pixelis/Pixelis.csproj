@@ -21,7 +21,7 @@
     <ItemGroup>
       <PackageReference Include="ImGui.NET" Version="1.91.6.1" />
       <PackageReference Include="RiptideNetworking.Riptide" Version="2.2.1" />
-      <PackageReference Include="Sparkle" Version="5.1.1" />
+      <PackageReference Include="Sparkle" Version="5.1.5" />
     </ItemGroup>
     
 </Project>

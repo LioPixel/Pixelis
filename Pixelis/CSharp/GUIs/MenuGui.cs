@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+using System.Numerics;
+using System.Diagnostics;
 using Bliss.CSharp.Colors;
 using Bliss.CSharp.Textures;
 using Bliss.CSharp.Transformations;
@@ -32,21 +33,37 @@ public class MenuGui : Gui
     {
         base.Init();
 
-        GuiManager.Scale = MathF.Max(1.0F, MathF.Round(((PixelisGame)Game.Instance!).OptionsConfig.GetValue<float>("GuiScale")));
+        GuiManager.SetScale(((PixelisGame)Game.Instance!).OptionsConfig.GetValue<int>("GuiScale"));
 
         LabelData fullscreen =
-            new LabelData(ContentRegistry.Fontoe, "please go to full screen", 18, color: Color.White);
-        this.AddElement("fullscreen",
+            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.main_menu.fullscreen_hint"), 18, color: Color.White);
+        this.AddElement("Fullscreen",
             new LabelElement(fullscreen, Anchor.BottomRight, new Vector2(0, 0), new Vector2(1.5F, 1.5F)));
+        
+        LabelData haveBug = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.main_menu.havebug"), 18, color: Color.White);
+        this.AddElement("HaveBug", new LabelElement(haveBug, Anchor.BottomRight, new Vector2(0, -670), new Vector2(1.2F, 1.2F)));
 
+        // Options button.
+        TextureButtonData mailButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        LabelData mailButtonLabelData = GuiText.ButtonLabel(Localization.T("gui.main_menu.mail"), 230);
+
+        this.AddElement("E-Mail-Button", new TextureButtonElement(mailButtonData, mailButtonLabelData, Anchor.BottomRight, new Vector2(-5, -630), size: new Vector2(160, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "mailto:kontakt@pixelis.net",
+                    UseShellExecute = true
+                });
+                return true;
+            }));
 
         ImageData logoData = new ImageData(ContentRegistry.Logo);
-        this.AddElement("logo", new ImageElement(logoData, Anchor.TopCenter, new Vector2(0, 50), scale: new Vector2(2,2)));
+        this.AddElement("Logo", new ImageElement(logoData, Anchor.TopCenter, new Vector2(0, 50), scale: new Vector2(2,2)));
 
         LabelData controlLabelData = new LabelData(ContentRegistry.Fontoe, this.BuildControlText(), 18, color: Color.White);
         this.AddElement("Control-Label", new LabelElement(controlLabelData, Anchor.TopLeft, new Vector2(10, 10)));
 
-        string creditsText = "Credits:\nLio: Developer/Designer\nMrScautHD: Developer";
+        string creditsText = Localization.T("gui.main_menu.credits");
         LabelData creditsLabelData = new LabelData(ContentRegistry.Fontoe, creditsText, 18, color: Color.White);
         this.AddElement("Credits-Label", new LabelElement(creditsLabelData, Anchor.BottomLeft, new Vector2(10, -10)));
 
@@ -74,8 +91,8 @@ public class MenuGui : Gui
 
         List<LabelData> multiplayerOptions =
         [
-            new LabelData(ContentRegistry.Fontoe, "Host", 18),
-            new LabelData(ContentRegistry.Fontoe, "Join", 18)
+            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.multiplayer.host"), 18),
+            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.multiplayer.join"), 18)
         ];
 
         TextureDropDownElement multiplayerdropDownElement = new TextureDropDownElement(
@@ -167,7 +184,7 @@ public class MenuGui : Gui
 
         // Texture button.
         TextureButtonData textureButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData textureButtonLabelData = new LabelData(ContentRegistry.Fontoe, "Play", 18, hoverColor: Color.White);
+        LabelData textureButtonLabelData = GuiText.ButtonLabel(Localization.T("common.play"), 230);
 
         this.AddElement("Texture-Button", new TextureButtonElement(textureButtonData, textureButtonLabelData,
             Anchor.Center, Vector2.Zero, size: new Vector2(230, 40), textOffset: new Vector2(0, 1),
@@ -176,7 +193,7 @@ public class MenuGui : Gui
                 Scene? selectedScene = LevelFactory.CreateByName(dropDownElement.SelectedOption?.Text ?? "Level 1");
                 if (selectedScene != null)
                 {
-                    AsyncOperation operation = SceneManager.LoadSceneAsync(selectedScene, new ProgressBarLoadingGui("Loading"));
+                    AsyncOperation operation = SceneManager.LoadSceneAsync(selectedScene, new ProgressBarLoadingGui("Loading", Localization.T("gui.loading.loading")));
                     operation.Completed += OnCompletedLoading;
                 }
                 
@@ -187,7 +204,7 @@ public class MenuGui : Gui
         TextureButtonData optionsButtonData = new TextureButtonData(ContentRegistry.UiButton,
             hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         LabelData optionsButtonLabelData =
-            new LabelData(ContentRegistry.Fontoe, "Options", 18, hoverColor: Color.White);
+            GuiText.ButtonLabel(Localization.T("common.options"), 230);
 
         this.AddElement("Options-Button", new TextureButtonElement(optionsButtonData, optionsButtonLabelData,
             Anchor.Center, new Vector2(0, 120), size: new Vector2(230, 40), textOffset: new Vector2(0, 1),
@@ -200,7 +217,7 @@ public class MenuGui : Gui
         // Exit button.
         TextureButtonData exitButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray,
             resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData exitButtonLabelData = new LabelData(ContentRegistry.Fontoe, "Exit", 18, hoverColor: Color.White);
+        LabelData exitButtonLabelData = GuiText.ButtonLabel(Localization.T("common.exit"), 230);
 
         this.AddElement("Exit-Button", new TextureButtonElement(exitButtonData, exitButtonLabelData, Anchor.Center,
             new Vector2(0, 180), size: new Vector2(230, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
@@ -213,7 +230,7 @@ public class MenuGui : Gui
         TextureButtonData multiplayerButtonData = new TextureButtonData(ContentRegistry.UiButton,
             hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         LabelData multiplayerButtonLabelData =
-            new LabelData(ContentRegistry.Fontoe, "Multiplayer", 18, hoverColor: Color.White);
+            GuiText.ButtonLabel(Localization.T("gui.main_menu.multiplayer"), 230);
 
         this.AddElement("Multiplayer-Button", new TextureButtonElement(multiplayerButtonData,
             multiplayerButtonLabelData, Anchor.Center, new Vector2(0, 60), size: new Vector2(230, 40),
@@ -221,12 +238,12 @@ public class MenuGui : Gui
             {
                 switch (multiplayerdropDownElement.SelectedOption?.Text)
                 {
-                    case "Host":
+                    case var text when text == Localization.T("gui.multiplayer.host"):
                         //Logger.Error("test");
                         GuiManager.SetGui(new HostGui());
                         break;
 
-                    case "Join":
+                    case var text when text == Localization.T("gui.multiplayer.join"):
                         GuiManager.SetGui(new JoinGui());
                         break;
                 }
@@ -235,7 +252,7 @@ public class MenuGui : Gui
             }));
 
         this.AddElement("Level-Editor-Button", new TextureButtonElement(optionsButtonData,
-            new LabelData(ContentRegistry.Fontoe, "Level Editor", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel(Localization.T("gui.level_editor.title"), 230),
             Anchor.Center, new Vector2(0, 120), size: new Vector2(230, 40), textOffset: new Vector2(0, 1),
             clickFunc: _ =>
             {
@@ -245,6 +262,19 @@ public class MenuGui : Gui
 
         ((TextureButtonElement)this.GetElement("Options-Button")!).Offset = new Vector2(0, 180);
         ((TextureButtonElement)this.GetElement("Exit-Button")!).Offset = new Vector2(0, 240);
+        
+        // Discord button.
+        TextureButtonData discordButtonData = new TextureButtonData(ContentRegistry.UiButton,hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        LabelData discordButtonLabelData = GuiText.ButtonLabel(Localization.T("common.discord"), 230);
+        this.AddElement("Discord-Button", new TextureButtonElement(discordButtonData, discordButtonLabelData, Anchor.Center, new Vector2(520, 300), size: new Vector2(200, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "https://discord.gg/rK8jCuYpqn",
+                UseShellExecute = true,
+            });
+                return true;
+            }));
     }
 
     protected override void Update(double delta)
@@ -289,7 +319,7 @@ public class MenuGui : Gui
 
     private string BuildControlText()
     {
-        return $"Controls:\n{KeyBindinds.GetMoveLeft()}: LEFT\n{KeyBindinds.GetMoveRight()}: RIGHT\n{KeyBindinds.GetJump()}: JUMP";
+        return $"{Localization.T("gui.main_menu.controls")}:\n{KeyBindinds.GetMoveLeft()}: {Localization.T("input.left")}\n{KeyBindinds.GetMoveRight()}: {Localization.T("input.right")}\n{KeyBindinds.GetJump()}: {Localization.T("input.jump").ToUpperInvariant()}";
     }
 
     protected override void Dispose(bool disposing)

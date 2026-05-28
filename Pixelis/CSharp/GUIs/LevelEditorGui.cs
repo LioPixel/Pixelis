@@ -62,7 +62,7 @@ public class LevelEditorGui : Gui
 
         this.AddElement("Save-Button", new TextureButtonElement(
             buttonData,
-            new LabelData(ContentRegistry.Fontoe, "Save", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel(Localization.T("common.save"), 150),
             Anchor.TopLeft,
             new Vector2(20, 20),
             size: new Vector2(150, 40),
@@ -76,7 +76,7 @@ public class LevelEditorGui : Gui
 
         this.AddElement("Play-Button", new TextureButtonElement(
             buttonData,
-            new LabelData(ContentRegistry.Fontoe, "Play", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel(Localization.T("common.play"), 150),
             Anchor.TopLeft,
             new Vector2(340, 20),
             size: new Vector2(150, 40),
@@ -85,7 +85,7 @@ public class LevelEditorGui : Gui
             {
                 _scene.SuppressPlacementUntilMouseRelease();
                 _scene.StartEditorPlayMode();
-                SetStatus("Player spawned at 0, 0");
+                SetStatus(Localization.T("gui.level_editor.player_spawned"));
                 return true;
             }));
 
@@ -181,7 +181,7 @@ public class LevelEditorGui : Gui
 
         this.AddElement("Back-Button", new TextureButtonElement(
             buttonData,
-            new LabelData(ContentRegistry.Fontoe, "Menu", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel(Localization.T("common.menu"), 150),
             Anchor.TopLeft,
             new Vector2(180, 20),
             size: new Vector2(150, 40),
@@ -195,7 +195,7 @@ public class LevelEditorGui : Gui
 
         this.AddElement("Place-Button", new TextureButtonElement(
             buttonData,
-            new LabelData(ContentRegistry.Fontoe, "", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel("", 130),
             Anchor.BottomCenter,
             new Vector2(-80, -30),
             size: new Vector2(130, 50),
@@ -209,7 +209,7 @@ public class LevelEditorGui : Gui
 
         this.AddElement("Eraser-Button", new TextureButtonElement(
             buttonData,
-            new LabelData(ContentRegistry.Fontoe, "", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel("", 130),
             Anchor.BottomCenter,
             new Vector2(65, -30),
             size: new Vector2(130, 50),
@@ -222,18 +222,18 @@ public class LevelEditorGui : Gui
             }));
 
         this.AddElement("Hotbar-Label", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, "Hotbar", 18, color: Color.White),
+            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.hotbar"), 18, color: Color.White),
             Anchor.BottomCenter,
             new Vector2(0, -92),
             new Vector2(1.5F, 1.5F)));
 
         _statusLabel = new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, "WASD / arrow keys move the camera", 18, color: Color.White),
+            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.camera_hint"), 18, color: Color.White),
             Anchor.BottomLeft,
             new Vector2(20, -24));
         this.AddElement("Status-Label", _statusLabel);
         
-        this.AddElement("Save-Confirm-Button", CreateModalButton(buttonData, "Save", new Vector2(-85, 100), () =>
+        this.AddElement("Save-Confirm-Button", CreateModalButton(buttonData, Localization.T("common.save"), new Vector2(-85, 100), () =>
         {
             if (_saveNameTextBox == null)
             {
@@ -248,7 +248,7 @@ public class LevelEditorGui : Gui
                 }
 
                 _scene.SaveLevel(_saveNameTextBox.LabelData.Text);
-                SetStatus($"Saved: {_saveNameTextBox.LabelData.Text.Trim()}");
+                SetStatus(Localization.F("gui.level_editor.saved", _saveNameTextBox.LabelData.Text.Trim()));
                 SetSaveDialogVisible(false);
             }
             catch (Exception exception)
@@ -257,7 +257,7 @@ public class LevelEditorGui : Gui
             }
         }));
 
-        this.AddElement("Save-Cancel-Button", CreateModalButton(buttonData, "Cancel", new Vector2(85, 100), () =>
+        this.AddElement("Save-Cancel-Button", CreateModalButton(buttonData, Localization.T("common.cancel"), new Vector2(85, 100), () =>
         {
             SetSaveDialogVisible(false);
         }));
@@ -266,7 +266,7 @@ public class LevelEditorGui : Gui
         _saveNameTextBox = new TextureTextBoxElement(
             textBoxData,
             new LabelData(ContentRegistry.Fontoe, _scene.LevelName, 18, hoverColor: Color.White),
-            new LabelData(ContentRegistry.Fontoe, "Level name...", 18, color: Color.Gray),
+            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.level_name_hint"), 18, color: Color.Gray),
             Anchor.Center,
             new Vector2(0, -25),
             30,
@@ -302,18 +302,18 @@ public class LevelEditorGui : Gui
         this.AddElement("Next-Level-Drop-Down", _nextLevelDropDown);
         
         this.AddElement("Save-Dialog-Title", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, "Save Level", 18, color: Color.White),
+            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.save_level"), 18, color: Color.White),
             Anchor.Center,
             new Vector2(0, -88),
             new Vector2(2, 2)));
 
         this.AddElement("Save-Dialog-Hint", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, "Choose the name for this level", 18, color: Color.LightGray),
+            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.save_level_hint"), 18, color: Color.LightGray),
             Anchor.Center,
             new Vector2(0, -60)));
 
         LabelElement nextLevelLabel = new(
-            new LabelData(ContentRegistry.Fontoe, "Win Flag -> Next Level", 18, color: Color.LightGray),
+            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.next_level"), 18, color: Color.LightGray),
             Anchor.Center,
             new Vector2(0, 12));
         nextLevelLabel.Enabled = false;
@@ -347,7 +347,7 @@ public class LevelEditorGui : Gui
                     }
 
                     _scene.SaveLevel(_saveNameTextBox.LabelData.Text);
-                    SetStatus($"Saved: {_saveNameTextBox.LabelData.Text.Trim()}");
+                    SetStatus(Localization.F("gui.level_editor.saved", _saveNameTextBox.LabelData.Text.Trim()));
                     SetSaveDialogVisible(false);
                 }
                 catch (Exception exception)
@@ -420,8 +420,8 @@ public class LevelEditorGui : Gui
 
     public void RefreshEditorState()
     {
-        SetButtonLabel("Place-Button", _scene.SelectedTool == EditorTool.Place ? "[Place]" : "Place");
-        SetButtonLabel("Eraser-Button", _scene.SelectedTool == EditorTool.Eraser ? "[Eraser]" : "Eraser");
+        SetButtonLabel("Place-Button", _scene.SelectedTool == EditorTool.Place ? $"[{Localization.T("gui.level_editor.tool.place")}]" : Localization.T("gui.level_editor.tool.place"));
+        SetButtonLabel("Eraser-Button", _scene.SelectedTool == EditorTool.Eraser ? $"[{Localization.T("gui.level_editor.tool.eraser")}]" : Localization.T("gui.level_editor.tool.eraser"));
         ToggleElement("Moving-Block-Speed-Drop-Down", _scene.SelectedPlaceable == PlaceableType.MovingBlock);
         ToggleElement("Placeable-Depth-Drop-Down", true);
         SetStatus(_scene.GetEditorStatusMessage());
@@ -431,7 +431,7 @@ public class LevelEditorGui : Gui
     {
         TextureButtonElement button = new(
             buttonData,
-            new LabelData(ContentRegistry.Fontoe, text, 18, hoverColor: Color.White),
+            GuiText.ButtonLabel(text, 150),
             Anchor.Center,
             offset,
             size: new Vector2(150, 40),
@@ -485,6 +485,8 @@ public class LevelEditorGui : Gui
         if (this.GetElement(name) is TextureButtonElement button)
         {
             button.LabelData.Text = text;
+            float buttonWidth = name is "Place-Button" or "Eraser-Button" ? 130F : 150F;
+            button.LabelData.Size = GuiText.ButtonLabel(text, buttonWidth).Size;
         }
     }
 
@@ -508,13 +510,16 @@ public class LevelEditorGui : Gui
         float[] values = [selectedSpeed, 0.5F, 1F, 1.5F, 2F, 3F];
         return values
             .Distinct()
-            .Select(speed => new LabelData(ContentRegistry.Fontoe, $"Speed {speed:0.0}", 18))
+            .Select(speed => new LabelData(ContentRegistry.Fontoe, $"{Localization.T("gui.level_editor.speed")} {speed:0.0}", 18))
             .ToList();
     }
 
     private static bool TryParseMovingBlockSpeed(string text, out float speed)
     {
-        string value = text.Replace("Speed", string.Empty, StringComparison.OrdinalIgnoreCase).Trim();
+        string value = text
+            .Replace("Speed", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace(Localization.T("gui.level_editor.speed"), string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Trim();
         return float.TryParse(value, out speed);
     }
 
@@ -523,13 +528,16 @@ public class LevelEditorGui : Gui
         float[] values = [selectedDepth, 0.1F, 0.2F, 0.3F, 0.4F, 0.5F, 0.6F, 0.7F, 0.8F, 0.9F];
         return values
             .Distinct()
-            .Select(depth => new LabelData(ContentRegistry.Fontoe, $"Depth {depth:0.0}", 18))
+            .Select(depth => new LabelData(ContentRegistry.Fontoe, $"{Localization.T("gui.level_editor.depth")} {depth:0.0}", 18))
             .ToList();
     }
 
     private static bool TryParseDepth(string text, out float depth)
     {
-        string value = text.Replace("Depth", string.Empty, StringComparison.OrdinalIgnoreCase).Trim();
+        string value = text
+            .Replace("Depth", string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Replace(Localization.T("gui.level_editor.depth"), string.Empty, StringComparison.OrdinalIgnoreCase)
+            .Trim();
         return float.TryParse(value, out depth);
     }
 

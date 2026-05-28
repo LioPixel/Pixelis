@@ -22,7 +22,8 @@ public class PixelisGame : Game
         jsonConfigBuilder.Add("DebugMode", false);
         jsonConfigBuilder.Add("Sounds", true);
         jsonConfigBuilder.Add("MasterVolume", 0.5F);
-        jsonConfigBuilder.Add("GuiScale", 1.0F);
+        jsonConfigBuilder.Add("GuiScale", 0);
+        jsonConfigBuilder.Add("Language", Localization.English);
         jsonConfigBuilder.Add("Toggle-Fps", true);
         jsonConfigBuilder.Add("KeybindMoveLeft", "A");
         jsonConfigBuilder.Add("KeybindMoveRight", "D");
@@ -37,9 +38,9 @@ public class PixelisGame : Game
         
         // Apply Config settings:
         GlobalGraphicsAssets.GraphicsDevice.SyncToVerticalBlank = this.OptionsConfig.GetValue<bool>("Vsync");
-        float guiScale = MathF.Max(1.0F, MathF.Round(this.OptionsConfig.GetValue<float>("GuiScale")));
+        int guiScale = Math.Clamp((int)MathF.Round(this.OptionsConfig.GetValue<float>("GuiScale")), 0, GuiManager.MaxAllowedScaleFactor);
         this.OptionsConfig.SetValue("GuiScale", guiScale);
-        GuiManager.Scale = guiScale;
+        GuiManager.SetScale(guiScale);
     }
     
     protected override void Init()

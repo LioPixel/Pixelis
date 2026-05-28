@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Bliss.CSharp.Colors;
 using Bliss.CSharp.Graphics.Rendering.Renderers.Batches.Sprites;
 using Bliss.CSharp.Interact;
@@ -24,7 +24,14 @@ public class JoinGui : Gui
     private float _errorDisplayTime = 0f;
     private const float OfficialServerPanelLeft = 20F;
     private readonly Vector2 _officialServerPanelSize = new Vector2(210, 250);
-    private readonly string[] _officialServerStatuses = ["off", "off", "off", "off", "off"];
+    private readonly string[] _officialServerStatuses =
+    [
+        Localization.T("gui.join.server_status.off"),
+        Localization.T("gui.join.server_status.off"),
+        Localization.T("gui.join.server_status.off"),
+        Localization.T("gui.join.server_status.off"),
+        Localization.T("gui.join.server_status.off")
+    ];
     private Task? _serverStatusProbeTask;
     private float _serverStatusProbeCooldown;
     
@@ -34,16 +41,18 @@ public class JoinGui : Gui
     {
         base.Init();
         
-        LabelData labelData = new LabelData(ContentRegistry.Fontoe, "Join", 18);
+        LabelData labelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.multiplayer.join"), 18);
         this.AddElement("Titel", new LabelElement(labelData, Anchor.TopCenter, new Vector2(0, 50), new Vector2(5, 5)));
 
-        LabelData officialServerListTitleData = new LabelData(ContentRegistry.Fontoe, "Official Servers", 18, color: Color.White);
+        LabelData officialServerListTitleData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.join.official_servers"), 18, color: Color.White);
         this.AddElement("Official-Server-List-Title", new LabelElement(officialServerListTitleData, Anchor.CenterLeft, new Vector2(27, -107), new Vector2(1.2F, 1.2F)));
         
         TextureButtonData backButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData backButtonLabelData = new LabelData(ContentRegistry.Fontoe, "Back", 18, hoverColor: Color.White);
+        string backText = Localization.T("common.back");
+        Vector2 backButtonSize = GuiText.ButtonSize(backText, 110);
+        LabelData backButtonLabelData = GuiText.ButtonLabel(backText, backButtonSize.X);
         
-        this.AddElement("Options-Button", new TextureButtonElement(backButtonData, backButtonLabelData, Anchor.Center, new Vector2(-200, -120), size: new Vector2(100, 40), textOffset: new Vector2(0, 1), clickFunc: (element) => {
+        this.AddElement("Options-Button", new TextureButtonElement(backButtonData, backButtonLabelData, Anchor.Center, new Vector2(-200, -120), size: backButtonSize, textOffset: new Vector2(0, 1), clickFunc: (element) => {
             if (SceneManager.ActiveScene != null)
             {
                 GuiManager.SetGui(new PauseMenuGui());
@@ -58,7 +67,7 @@ public class JoinGui : Gui
         // IP address text box.
         TextureTextBoxData ipadressTextBoxData = new TextureTextBoxData(ContentRegistry.UiMenu, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12), flip: SpriteFlip.None);
         LabelData ipadressTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, "", 18, hoverColor: Color.White);
-        LabelData ipadressHintTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, "Type IP address...", 18, color: Color.Gray);
+        LabelData ipadressHintTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.join.ip_hint"), 18, color: Color.Gray);
         
         this.AddElement("IP-Adress-Text-Box", new TextureTextBoxElement(ipadressTextBoxData, ipadressTextBoxLabelData, ipadressHintTextBoxLabelData, Anchor.Center, new Vector2(0, -10), 40, TextAlignment.Center, new Vector2(0, 1), Vector2.One, (12, 12), new Vector2(260, 30), rotation: 0, clickFunc: (element) => {
             return true;
@@ -66,7 +75,7 @@ public class JoinGui : Gui
         
         // Join button.
         TextureButtonData createButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData createButtonLabelData = new LabelData(ContentRegistry.Fontoe, "Join", 18, hoverColor: Color.White);
+        LabelData createButtonLabelData = GuiText.ButtonLabel(Localization.T("gui.multiplayer.join"), 230);
         
         this.AddElement("Join-Button", new TextureButtonElement(createButtonData, createButtonLabelData, Anchor.Center, new Vector2(0, 60), size: new Vector2(230, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
         {
@@ -84,7 +93,7 @@ public class JoinGui : Gui
         // Username text box.
         TextureTextBoxData nameTextBoxData = new TextureTextBoxData(ContentRegistry.UiMenu, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12), flip: SpriteFlip.None);
         LabelData nameTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, "", 18, hoverColor: Color.White);
-        LabelData nameHintTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, "Type your name...", 18, color: Color.Gray);
+        LabelData nameHintTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.multiplayer.name_hint"), 18, color: Color.Gray);
         
         this.AddElement("Name-Text-Box", new TextureTextBoxElement(nameTextBoxData, nameTextBoxLabelData, nameHintTextBoxLabelData, Anchor.Center, new Vector2(120, -120), 15, TextAlignment.Center, new Vector2(0, 1), Vector2.One, (12, 12), new Vector2(230, 30), rotation: 0, clickFunc: (element) => {
             return true;
@@ -94,7 +103,7 @@ public class JoinGui : Gui
 
         this.AddElement("Official-Server-1-Button", new TextureButtonElement(
             serverButtonData,
-            new LabelData(ContentRegistry.Fontoe, "Pixelis 1", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel("Pixelis 1", 170),
             Anchor.CenterLeft,
             new Vector2(40, -67),
             size: new Vector2(170, 26),
@@ -110,7 +119,7 @@ public class JoinGui : Gui
 
         this.AddElement("Official-Server-2-Button", new TextureButtonElement(
             serverButtonData,
-            new LabelData(ContentRegistry.Fontoe, "Pixelis 2", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel("Pixelis 2", 170),
             Anchor.CenterLeft,
             new Vector2(40, -35),
             size: new Vector2(170, 26),
@@ -123,7 +132,7 @@ public class JoinGui : Gui
 
         this.AddElement("Official-Server-3-Button", new TextureButtonElement(
             serverButtonData,
-            new LabelData(ContentRegistry.Fontoe, "Pixelis 3", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel("Pixelis 3", 170),
             Anchor.CenterLeft,
             new Vector2(40, -3),
             size: new Vector2(170, 26),
@@ -136,7 +145,7 @@ public class JoinGui : Gui
 
         this.AddElement("Official-Server-4-Button", new TextureButtonElement(
             serverButtonData,
-            new LabelData(ContentRegistry.Fontoe, "Pixelis 4", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel("Pixelis 4", 170),
             Anchor.CenterLeft,
             new Vector2(40, 29),
             size: new Vector2(170, 26),
@@ -149,7 +158,7 @@ public class JoinGui : Gui
 
         this.AddElement("Official-Server-5-Button", new TextureButtonElement(
             serverButtonData,
-            new LabelData(ContentRegistry.Fontoe, "Pixelis 5", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel("Pixelis 5", 170),
             Anchor.CenterLeft,
             new Vector2(40, 61),
             size: new Vector2(170, 26),
@@ -160,7 +169,7 @@ public class JoinGui : Gui
                 return true;
             }));
 
-        LabelData officialServerHintData = new LabelData(ContentRegistry.Fontoe, "2-5 coming soon", 18, color: Color.LightGray);
+        LabelData officialServerHintData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.join.coming_soon"), 18, color: Color.LightGray);
         this.AddElement("Official-Server-Hint", new LabelElement(officialServerHintData, Anchor.CenterLeft, new Vector2(50, 95), new Vector2(1, 1)));
         RefreshOfficialServerLabels();
         QueueServerStatusProbe();
@@ -181,11 +190,11 @@ public class JoinGui : Gui
 
         if (string.IsNullOrWhiteSpace(username))
         {
-            username = "Player";
+            username = Localization.T("network.player.default_name");
         }
 
         _isConnecting = true;
-        _errorMessage = "Connecting...";
+        _errorMessage = Localization.T("gui.join.connecting");
         UpdateErrorLabel();
 
         NetworkManager.SetConnectionCallbacks(OnConnectionSuccess, OnConnectionFailed);
@@ -194,7 +203,7 @@ public class JoinGui : Gui
 
     private void ShowComingSoonMessage()
     {
-        _errorMessage = "This official server slot is coming soon.";
+        _errorMessage = Localization.T("gui.join.official_server_coming_soon");
         _errorDisplayTime = 3f;
         UpdateErrorLabel();
     }
@@ -211,7 +220,7 @@ public class JoinGui : Gui
     private void OnConnectionFailed(string reason)
     {
         _isConnecting = false;
-        _errorMessage = $"Connection failed: {reason}";
+        _errorMessage = Localization.F("gui.join.connection_failed", reason);
         _errorDisplayTime = 5f; // Display error for 5 seconds
         UpdateErrorLabel();
     }
@@ -233,11 +242,11 @@ public class JoinGui : Gui
 
     private async Task ProbeOfficialServerStatusesAsync()
     {
-        _officialServerStatuses[0] = await ProbeServerAsync(OfficialServer1Address) ? "on" : "off";
-        _officialServerStatuses[1] = "off";
-        _officialServerStatuses[2] = "off";
-        _officialServerStatuses[3] = "off";
-        _officialServerStatuses[4] = "off";
+        _officialServerStatuses[0] = await ProbeServerAsync(OfficialServer1Address) ? Localization.T("gui.join.server_status.on") : Localization.T("gui.join.server_status.off");
+        _officialServerStatuses[1] = Localization.T("gui.join.server_status.off");
+        _officialServerStatuses[2] = Localization.T("gui.join.server_status.off");
+        _officialServerStatuses[3] = Localization.T("gui.join.server_status.off");
+        _officialServerStatuses[4] = Localization.T("gui.join.server_status.off");
         RefreshOfficialServerLabels();
     }
 
@@ -303,6 +312,7 @@ public class JoinGui : Gui
         if (this.GetElement(elementName) is TextureButtonElement button)
         {
             button.LabelData.Text = text;
+            button.LabelData.Size = GuiText.ButtonLabel(text, 170).Size;
         }
     }
     

@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Bliss.CSharp.Colors;
 using Bliss.CSharp.Textures;
 using Bliss.CSharp.Transformations;
@@ -17,9 +17,9 @@ public class ProgressBarLoadingGui : LoadingGui
 
     private string _loadingText;
 
-    public ProgressBarLoadingGui(string name, string loadingText = "Loading", float minTime = 2.5F, (int, int)? size = null) : base(name, minTime, size)
+    public ProgressBarLoadingGui(string name, string? loadingText = null, float minTime = 2.5F, (int, int)? size = null) : base(name, minTime, size)
     {
-        this._loadingText = loadingText;
+        this._loadingText = loadingText ?? Localization.T("gui.loading.loading");
     }
     
     protected override void Init() {

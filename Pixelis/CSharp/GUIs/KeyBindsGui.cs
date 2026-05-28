@@ -34,19 +34,23 @@ public class KeyBindsGui : Gui
     {
         base.Init();
 
-        LabelData titleData = new LabelData(ContentRegistry.Fontoe, "Key Binds", 18);
+        LabelData titleData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.keybinds.title"), 18);
         this.AddElement("Title", new LabelElement(titleData, Anchor.TopCenter, new Vector2(0, 50), new Vector2(5, 5)));
 
         TextureButtonData buttonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData backLabelData = new LabelData(ContentRegistry.Fontoe, "Back", 18, hoverColor: Color.White);
-        this.AddElement("Back-Button", new TextureButtonElement(buttonData, backLabelData, Anchor.Center, new Vector2(-200, -120), size: new Vector2(100, 40), textOffset: new Vector2(0, 1), clickFunc: _ =>
+        string backText = Localization.T("common.back");
+        Vector2 backButtonSize = GuiText.ButtonSize(backText, 110);
+        LabelData backLabelData = GuiText.ButtonLabel(backText, backButtonSize.X);
+        this.AddElement("Back-Button", new TextureButtonElement(buttonData, backLabelData, Anchor.Center, new Vector2(-200, -120), size: backButtonSize, textOffset: new Vector2(0, 1), clickFunc: _ =>
         {
-            GuiManager.SetGui(new OptionsGui());
+            GuiManager.SetGui(new ExtandedOptionsGui());
             return true;
         }));
 
-        LabelData resetLabelData = new LabelData(ContentRegistry.Fontoe, "Reset", 18, hoverColor: Color.White);
-        this.AddElement("Reset-Button", new TextureButtonElement(buttonData, resetLabelData, Anchor.Center, new Vector2(190, -120), size: new Vector2(100, 40), textOffset: new Vector2(0, 1), clickFunc: _ =>
+        string resetText = Localization.T("common.reset");
+        Vector2 resetButtonSize = GuiText.ButtonSize(resetText, 120, maxWidth: 175);
+        LabelData resetLabelData = GuiText.ButtonLabel(resetText, resetButtonSize.X);
+        this.AddElement("Reset-Button", new TextureButtonElement(buttonData, resetLabelData, Anchor.Center, new Vector2(170, -120), size: resetButtonSize, textOffset: new Vector2(0, 1), clickFunc: _ =>
         {
             this._captureFor = null;
             KeyBindinds.ResetToDefaults();
@@ -54,8 +58,8 @@ public class KeyBindsGui : Gui
             return true;
         }));
 
-        this.AddElement("Move-Left-Button", MakeBindButton(buttonData, "Move Left", KeyBindinds.GetMoveLeft(), new Vector2(0, -50), BindingAction.MoveLeft));
-        this.AddElement("Move-Right-Button", MakeBindButton(buttonData, "Move Right", KeyBindinds.GetMoveRight(), new Vector2(0, 0), BindingAction.MoveRight));
+        this.AddElement("Move-Left-Button", MakeBindButton(buttonData, Localization.F(""), KeyBindinds.GetMoveLeft(), new Vector2(0, -50), BindingAction.MoveLeft));
+        this.AddElement("Move-Right-Button", MakeBindButton(buttonData, "MoveRight", KeyBindinds.GetMoveRight(), new Vector2(0, 0), BindingAction.MoveRight));
         this.AddElement("Jump-Button", MakeBindButton(buttonData, "Jump", KeyBindinds.GetJump(), new Vector2(0, 50), BindingAction.Jump));
     }
 
@@ -88,7 +92,7 @@ public class KeyBindsGui : Gui
 
         if (Input.IsKeyPressed(KeyboardKey.Escape))
         {
-            GuiManager.SetGui(new OptionsGui());
+            GuiManager.SetGui(new ExtandedOptionsGui());
         }
     }
 
@@ -109,35 +113,38 @@ public class KeyBindsGui : Gui
         base.Draw(context, framebuffer);
     }
 
-    private TextureButtonElement MakeBindButton(TextureButtonData buttonData, string label, KeyboardKey currentKey, Vector2 offset, BindingAction bindingAction)
+    private TextureButtonElement MakeBindButton(TextureButtonData buttonData, string labelKey, KeyboardKey currentKey, Vector2 offset, BindingAction bindingAction)
     {
-        LabelData bindLabelData = new LabelData(ContentRegistry.Fontoe, BuildBindText(label, currentKey), 18, hoverColor: Color.White);
-        return new TextureButtonElement(buttonData, bindLabelData, Anchor.Center, offset, size: new Vector2(280, 40), textOffset: new Vector2(0, 1), clickFunc: _ =>
+        const float bindButtonWidth = 320F;
+        LabelData bindLabelData = GuiText.ButtonLabel(BuildBindText(labelKey, currentKey), bindButtonWidth);
+        return new TextureButtonElement(buttonData, bindLabelData, Anchor.Center, offset, size: new Vector2(bindButtonWidth, 40), textOffset: new Vector2(0, 1), clickFunc: _ =>
         {
             this._captureFor = bindingAction;
-            bindLabelData.Text = $"{label}: ...";
+            bindLabelData.Text = $"{Localization.T(labelKey)}: ...";
+            bindLabelData.Size = GuiText.ButtonLabel(bindLabelData.Text, bindButtonWidth).Size;
             return true;
         });
     }
 
     private void RefreshButtonTexts()
     {
-        SetButtonText("Move-Left-Button", "Move Left", KeyBindinds.GetMoveLeft());
-        SetButtonText("Move-Right-Button", "Move Right", KeyBindinds.GetMoveRight());
+        SetButtonText("Move-Left-Button", "MoveLeft", KeyBindinds.GetMoveLeft());
+        SetButtonText("Move-Right-Button", "MoveRight", KeyBindinds.GetMoveRight());
         SetButtonText("Jump-Button", "Jump", KeyBindinds.GetJump());
     }
 
-    private void SetButtonText(string elementName, string actionName, KeyboardKey key)
+    private void SetButtonText(string elementName, string actionNameKey, KeyboardKey key)
     {
         if (this.TryGetElement(elementName, out GuiElement? element) && element is TextureButtonElement button)
         {
-            button.LabelData.Text = BuildBindText(actionName, key);
+            button.LabelData.Text = BuildBindText(actionNameKey, key);
+            button.LabelData.Size = GuiText.ButtonLabel(button.LabelData.Text, 320F).Size;
         }
     }
 
-    private static string BuildBindText(string action, KeyboardKey key)
+    private static string BuildBindText(string actionKey, KeyboardKey key)
     {
-        return $"{action}: {key}";
+        return $"{Localization.T(actionKey)}: {key}";
     }
 
     private static KeyboardKey? TryGetPressedKey()

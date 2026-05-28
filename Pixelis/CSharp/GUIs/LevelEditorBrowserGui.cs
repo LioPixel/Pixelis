@@ -34,7 +34,7 @@ public class LevelEditorBrowserGui : Gui
         base.Init();
 
         this.AddElement("Title", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, "Level Editor", 18),
+            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.title"), 18),
             Anchor.TopCenter,
             new Vector2(0, 70),
             new Vector2(4, 4)));
@@ -63,7 +63,7 @@ public class LevelEditorBrowserGui : Gui
         List<string> savedLevels = CustomLevelStorage.GetSavedLevelNames();
         List<LabelData> options = savedLevels.Count > 0
             ? savedLevels.Select(level => new LabelData(ContentRegistry.Fontoe, level, 18)).ToList()
-            : [new LabelData(ContentRegistry.Fontoe, "No Levels Yet", 18, color: Color.Gray)];
+            : [new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_browser.no_levels_yet"), 18, color: Color.Gray)];
 
         _savedLevelsDropDown = new TextureDropDownElement(
             dropDownData,
@@ -86,7 +86,7 @@ public class LevelEditorBrowserGui : Gui
 
         _openButton = new TextureButtonElement(
             buttonData,
-            new LabelData(ContentRegistry.Fontoe, "Open", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel(Localization.T("common.open"), 230),
             Anchor.Center,
             new Vector2(0, 30),
             size: new Vector2(230, 40),
@@ -104,7 +104,7 @@ public class LevelEditorBrowserGui : Gui
                     return true;
                 }
 
-                AsyncOperation operation = SceneManager.LoadSceneAsync(new CustomLevelScene(existingLevel, true), new ProgressBarLoadingGui("Loading"));
+                AsyncOperation operation = SceneManager.LoadSceneAsync(new CustomLevelScene(existingLevel, true), new ProgressBarLoadingGui("Loading", Localization.T("gui.loading.loading")));
                 operation.Completed += _ => { };
                 return true;
             });
@@ -114,7 +114,7 @@ public class LevelEditorBrowserGui : Gui
 
         _deleteButton = new TextureButtonElement(
             buttonData,
-            new LabelData(ContentRegistry.Fontoe, "Delete", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel(Localization.T("common.delete"), 230),
             Anchor.Center,
             new Vector2(0, 90),
             size: new Vector2(230, 40),
@@ -132,7 +132,7 @@ public class LevelEditorBrowserGui : Gui
                 }
                 else
                 {
-                    _statusMessage = "Could not delete level.";
+                    _statusMessage = Localization.T("gui.level_browser.could_not_delete_level");
                     UpdateStatusLabel();
                 }
 
@@ -144,7 +144,7 @@ public class LevelEditorBrowserGui : Gui
 
         this.AddElement("New-Button", new TextureButtonElement(
             buttonData,
-            new LabelData(ContentRegistry.Fontoe, "New", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel(Localization.T("common.new"), 230),
             Anchor.Center,
             new Vector2(0, 150),
             size: new Vector2(230, 40),
@@ -153,14 +153,14 @@ public class LevelEditorBrowserGui : Gui
             {
                 AsyncOperation operation = SceneManager.LoadSceneAsync(
                     new CustomLevelScene(CustomLevelStorage.CreateNew(), true),
-                    new ProgressBarLoadingGui("Loading"));
+                    new ProgressBarLoadingGui("Loading", Localization.T("gui.loading.loading")));
                 operation.Completed += _ => { };
                 return true;
             }));
 
         this.AddElement("Back-Button", new TextureButtonElement(
             buttonData,
-            new LabelData(ContentRegistry.Fontoe, "Back", 18, hoverColor: Color.White),
+            GuiText.ButtonLabel(Localization.T("common.back"), 230),
             Anchor.Center,
             new Vector2(0, 210),
             size: new Vector2(230, 40),

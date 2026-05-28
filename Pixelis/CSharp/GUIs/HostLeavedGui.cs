@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Bliss.CSharp.Colors;
 using Bliss.CSharp.Interact;
 using Bliss.CSharp.Interact.Keyboards;
@@ -27,15 +27,17 @@ public class HostLeavedGui : Gui
     {
         base.Init();
 
-        LabelData hostleavedData = new LabelData(ContentRegistry.Fontoe, "The host has leaved the game", 18);
+        LabelData hostleavedData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.host_left.message"), 18);
         this.AddElement("host-leaved", new LabelElement(hostleavedData, Anchor.TopCenter, new Vector2(0, 200), new Vector2(3, 3)));
         
         // Menu button.
         TextureButtonData menuButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData menuButtonLabelData = new LabelData(ContentRegistry.Fontoe, "Back to Main Menu", 18, hoverColor: Color.White);
+        string menuText = Localization.T("gui.host_left.back_to_main_menu");
+        Vector2 menuButtonSize = GuiText.ButtonSize(menuText, 230, maxWidth: 320);
+        LabelData menuButtonLabelData = GuiText.ButtonLabel(menuText, menuButtonSize.X);
         
-        this.AddElement("Menu-Button", new TextureButtonElement(menuButtonData, menuButtonLabelData, Anchor.Center, new Vector2(0, 60), size: new Vector2(230, 40), textOffset: new Vector2(0, 1), clickFunc: (element) => {
-            AsyncOperation operation = SceneManager.LoadSceneAsync(null, new ProgressBarLoadingGui("Loading"));
+        this.AddElement("Menu-Button", new TextureButtonElement(menuButtonData, menuButtonLabelData, Anchor.Center, new Vector2(0, 60), size: menuButtonSize, textOffset: new Vector2(0, 1), clickFunc: (element) => {
+            AsyncOperation operation = SceneManager.LoadSceneAsync(null, new ProgressBarLoadingGui("Loading", Localization.T("gui.loading.loading")));
 
             operation.Completed += success =>
             {

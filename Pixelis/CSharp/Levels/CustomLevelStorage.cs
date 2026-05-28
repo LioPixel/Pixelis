@@ -94,7 +94,7 @@ public static class CustomLevelStorage
                 return null;
             }
 
-            data.Name = string.IsNullOrWhiteSpace(data.Name) ? "Custom Level" : data.Name.Trim();
+            data.Name = string.IsNullOrWhiteSpace(data.Name) ? Localization.T("level.custom_level") : data.Name.Trim();
             data.Id = string.IsNullOrWhiteSpace(data.Id) ? NormalizeName(data.Name) : data.Id.Trim();
             data.NextLevelName = data.NextLevelName?.Trim() ?? string.Empty;
             data.Blocks ??= [];
@@ -106,8 +106,9 @@ public static class CustomLevelStorage
         }
     }
 
-    public static CustomLevelData CreateNew(string name = "New Level")
+    public static CustomLevelData CreateNew(string? name = null)
     {
+        name ??= Localization.T("level.new_level");
         return new CustomLevelData
         {
             Id = NormalizeName(name),
@@ -123,12 +124,12 @@ public static class CustomLevelStorage
         string levelName = data.Name.Trim();
         if (string.IsNullOrWhiteSpace(levelName))
         {
-            throw new InvalidOperationException("Level name cannot be empty.");
+            throw new InvalidOperationException(Localization.T("level.error.name_empty"));
         }
 
         if (LevelFactory.IsBuiltInLevelName(levelName))
         {
-            throw new InvalidOperationException("This level name is already used by a built-in level.");
+            throw new InvalidOperationException(Localization.T("level.error.builtin_name_used"));
         }
 
         string normalizedId = NormalizeName(levelName);

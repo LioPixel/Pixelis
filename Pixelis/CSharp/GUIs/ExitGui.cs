@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Bliss.CSharp.Colors;
 using Bliss.CSharp.Interact;
 using Bliss.CSharp.Interact.Keyboards;
@@ -26,14 +26,14 @@ public class ExitGui : Gui
     {
         base.Init();
         
-        LabelData labelData = new LabelData(ContentRegistry.Fontoe, "Exit", 18);
+        LabelData labelData = new LabelData(ContentRegistry.Fontoe, Localization.T("common.exit"), 18);
         this.AddElement("Title", new LabelElement(labelData, Anchor.TopCenter, new Vector2(0, 50), new Vector2(5, 5)));
 
-        LabelData textData = new LabelData(ContentRegistry.Fontoe, "Do you want to exit the game?", 18);
+        LabelData textData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.exit.confirm_question"), 18);
         this.AddElement("exit", new LabelElement(textData, Anchor.Center, new Vector2(0, -80), scale: new Vector2(1.5F, 1.5F)));
         
         TextureButtonData yesButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData yesButtonLabelData = new LabelData(ContentRegistry.Fontoe, "Yes", 18, hoverColor: Color.White);
+        LabelData yesButtonLabelData = GuiText.ButtonLabel(Localization.T("common.yes"), 100);
         
         this.AddElement("Yes-Button", new TextureButtonElement(yesButtonData, yesButtonLabelData, Anchor.Center, new Vector2(-90, 0), size: new Vector2(100, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
         {
@@ -42,7 +42,7 @@ public class ExitGui : Gui
         }));
         
         TextureButtonData noButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData noButtonLabelData = new LabelData(ContentRegistry.Fontoe, "No", 18, hoverColor: Color.White);
+        LabelData noButtonLabelData = GuiText.ButtonLabel(Localization.T("common.no"), 100);
         
         this.AddElement("No-Button", new TextureButtonElement(noButtonData, noButtonLabelData, Anchor.Center, new Vector2(90, 0), size: new Vector2(100, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
         {

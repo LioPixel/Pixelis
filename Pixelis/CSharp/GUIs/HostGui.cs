@@ -1,4 +1,4 @@
-﻿﻿using System.Numerics;
+﻿using System.Numerics;
 using Bliss.CSharp.Colors;
 using Bliss.CSharp.Graphics.Rendering.Renderers.Batches.Sprites;
 using Bliss.CSharp.Interact;
@@ -29,7 +29,7 @@ public class HostGui : Gui
     {
         base.Init();
         
-        LabelData labelData = new LabelData(ContentRegistry.Fontoe, "Host", 18);
+        LabelData labelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.multiplayer.host"), 18);
         this.AddElement("Titel", new LabelElement(labelData, Anchor.TopCenter, new Vector2(0, 50), new Vector2(5, 5)));
 
         TextureButtonData infoButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
@@ -41,9 +41,11 @@ public class HostGui : Gui
         }));
         
         TextureButtonData backButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData backButtonLabelData = new LabelData(ContentRegistry.Fontoe, "Back", 18, hoverColor: Color.White);
+        string backText = Localization.T("common.back");
+        Vector2 backButtonSize = GuiText.ButtonSize(backText, 110);
+        LabelData backButtonLabelData = GuiText.ButtonLabel(backText, backButtonSize.X);
         
-        this.AddElement("Options-Button", new TextureButtonElement(backButtonData, backButtonLabelData, Anchor.Center, new Vector2(-200, -120), size: new Vector2(100, 40), textOffset: new Vector2(0, 1), clickFunc: (element) => {
+        this.AddElement("Options-Button", new TextureButtonElement(backButtonData, backButtonLabelData, Anchor.Center, new Vector2(-200, -120), size: backButtonSize, textOffset: new Vector2(0, 1), clickFunc: (element) => {
             if (SceneManager.ActiveScene != null)
             {
                 GuiManager.SetGui(new PauseMenuGui());
@@ -55,7 +57,7 @@ public class HostGui : Gui
             return true;
         }));
         
-        LabelData slotslabelData = new LabelData(ContentRegistry.Fontoe, "Slots", 18);
+        LabelData slotslabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.host.slots"), 18);
         this.AddElement("slots", new LabelElement(slotslabelData, Anchor.Center, new Vector2(0, -70), new Vector2(1.5F,1.5F)));
         
         LabelData twolabelData = new LabelData(ContentRegistry.Fontoe, "2", 18);
@@ -131,7 +133,7 @@ public class HostGui : Gui
         // Texture text box.
         TextureTextBoxData nameTextBoxData = new TextureTextBoxData(ContentRegistry.UiMenu, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12), flip: SpriteFlip.None);
         LabelData nameTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, "", 18, hoverColor: Color.White);
-        LabelData nameHintTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, "Type your name...", 18, color: Color.Gray);
+        LabelData nameHintTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.multiplayer.name_hint"), 18, color: Color.Gray);
         
         this.AddElement("Name-Text-Box", new TextureTextBoxElement(nameTextBoxData, nameTextBoxLabelData, nameHintTextBoxLabelData, Anchor.Center, new Vector2(120, -120), 15, TextAlignment.Center, new Vector2(0, 1), Vector2.One, (12, 12), new Vector2(230, 30), rotation: 0, clickFunc: (element) => {
             return true;
@@ -141,26 +143,22 @@ public class HostGui : Gui
         this.AddElement("Error-Label", new LabelElement(errorLabelData, Anchor.Center, new Vector2(0, 110), new Vector2(1, 1)));
 
         this.AddElement("Tutorial-Title", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, "Tailscale Tutorial", 18, color: Color.White),
+            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.host.tailscale.title"), 18, color: Color.White),
             Anchor.Center,
             new Vector2(0, -108),
             new Vector2(1.8F, 1.8F)));
 
-        string tailscaleTutorialText =
-            "1. Install Tailscale on host + friends.\n" +
-            "2. Sign in with the same Tailscale account/team.\n" +
-            "3. Open Tailscale and connect on all devices.\n" +
-            "4. Host the server here in Pixelis.\n" +
-            "5. Share your Tailscale IPv4 (100.x.x.x).\n" +
-            "6. Friends Join with your IP + port.";
+        string tailscaleTutorialText = Localization.T("gui.host.tailscale.body");
         this.AddElement("Tutorial-Body", new LabelElement(
             new LabelData(ContentRegistry.Fontoe, tailscaleTutorialText, 18, color: Color.LightGray),
             Anchor.Center,
             new Vector2(0, -8)));
 
         TextureButtonData tutorialCloseButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData tutorialCloseButtonLabelData = new LabelData(ContentRegistry.Fontoe, "Close", 18, hoverColor: Color.White);
-        this.AddElement("Tutorial-Close-Button", new TextureButtonElement(tutorialCloseButtonData, tutorialCloseButtonLabelData, Anchor.Center, new Vector2(0, 112), size: new Vector2(150, 40), textOffset: new Vector2(0, 1), clickFunc: _ =>
+        string closeText = Localization.T("common.close");
+        Vector2 closeButtonSize = GuiText.ButtonSize(closeText, 150);
+        LabelData tutorialCloseButtonLabelData = GuiText.ButtonLabel(closeText, closeButtonSize.X);
+        this.AddElement("Tutorial-Close-Button", new TextureButtonElement(tutorialCloseButtonData, tutorialCloseButtonLabelData, Anchor.Center, new Vector2(0, 112), size: closeButtonSize, textOffset: new Vector2(0, 1), clickFunc: _ =>
         {
             SetTutorialVisible(false);
             return true;
@@ -170,7 +168,7 @@ public class HostGui : Gui
         
         // Host button.
         TextureButtonData createButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData createButtonLabelData = new LabelData(ContentRegistry.Fontoe, "Host", 18, hoverColor: Color.White);
+        LabelData createButtonLabelData = GuiText.ButtonLabel(Localization.T("gui.multiplayer.host"), 230);
         
         this.AddElement("Host-Button", new TextureButtonElement(createButtonData, createButtonLabelData, Anchor.Center, new Vector2(0, 60), size: new Vector2(230, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
         {
@@ -183,7 +181,7 @@ public class HostGui : Gui
                 
                 if (string.IsNullOrWhiteSpace(username))
                 {
-                    username = "Player";
+                    username = Localization.T("network.player.default_name");
                 }
 
                 if (NetworkManager.CreateServer((ushort) slideBar.Value, dropDownElement.SelectedOption?.Text ?? "Level 1", username, out string errorMessage))

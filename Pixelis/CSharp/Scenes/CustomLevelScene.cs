@@ -243,7 +243,7 @@ public class CustomLevelScene : LevelScene
             return;
         }
 
-        AsyncOperation operation = SceneManager.LoadSceneAsync(nextScene, new ProgressBarLoadingGui("Loading"));
+        AsyncOperation operation = SceneManager.LoadSceneAsync(nextScene, new ProgressBarLoadingGui("Loading", Localization.T("gui.loading.loading")));
         operation.Completed += _ =>
         {
             if (SceneManager.ActiveScene is CustomLevelScene customLevelScene)
@@ -302,18 +302,18 @@ public class CustomLevelScene : LevelScene
         if (_selectedPlaceable == PlaceableType.MovingBlock)
         {
             return _pendingMovingBlockStart.HasValue
-                ? $"Moving Block: choose target, speed {_selectedMovingBlockSpeed:0.0}, depth {_selectedPlaceableDepth:0.0}"
-                : $"Moving Block: choose start, speed {_selectedMovingBlockSpeed:0.0}, depth {_selectedPlaceableDepth:0.0}";
+                ? Localization.F("gui.level_editor.status.moving_block_target", _selectedMovingBlockSpeed, _selectedPlaceableDepth)
+                : Localization.F("gui.level_editor.status.moving_block_start", _selectedMovingBlockSpeed, _selectedPlaceableDepth);
         }
 
         if (_selectedPlaceable == PlaceableType.Portal)
         {
             return _pendingPortalStart.HasValue
-                ? $"Portal: choose target, depth {_selectedPlaceableDepth:0.0}"
-                : $"Portal: choose start, depth {_selectedPlaceableDepth:0.0}";
+                ? Localization.F("gui.level_editor.status.portal_target", _selectedPlaceableDepth)
+                : Localization.F("gui.level_editor.status.portal_start", _selectedPlaceableDepth);
         }
 
-        return $"WASD / arrow keys move the camera, depth {_selectedPlaceableDepth:0.0}";
+        return Localization.F("gui.level_editor.status.camera_depth", _selectedPlaceableDepth);
     }
 
     public void StartEditorPlayMode()
@@ -381,7 +381,7 @@ public class CustomLevelScene : LevelScene
 
     private void AsyncOperationBackToBrowser()
     {
-        AsyncOperation operation = SceneManager.LoadSceneAsync(null, new GUIs.Loading.ProgressBarLoadingGui("Loading"));
+        AsyncOperation operation = SceneManager.LoadSceneAsync(null, new GUIs.Loading.ProgressBarLoadingGui("Loading", Localization.T("gui.loading.loading")));
         operation.Completed += _ => GuiManager.SetGui(new LevelEditorBrowserGui());
     }
 
@@ -493,20 +493,20 @@ public class CustomLevelScene : LevelScene
     {
         return placeable switch
         {
-            PlaceableType.Block => "Block",
-            PlaceableType.MovingBlock => "Moving Block",
-            PlaceableType.Portal => "Portal",
-            PlaceableType.WinFlag => "Win Flag",
-            PlaceableType.Tree => "Tree",
-            PlaceableType.TreeDead => "Dead Tree",
-            PlaceableType.FlowerOrange => "Orange Flower",
-            PlaceableType.Bush => "Bush",
-            PlaceableType.PlantSunFlower => "Sunflower",
-            PlaceableType.BushDead => "Dead Bush",
-            PlaceableType.RockWithGrass => "Rock Grass",
-            PlaceableType.PlantFlowerRed => "Red Flower",
-            PlaceableType.OakLog => "Oak Log",
-            PlaceableType.Grass => "Grass",
+            PlaceableType.Block => Localization.T("placeable.block"),
+            PlaceableType.MovingBlock => Localization.T("placeable.moving_block"),
+            PlaceableType.Portal => Localization.T("placeable.portal"),
+            PlaceableType.WinFlag => Localization.T("placeable.win_flag"),
+            PlaceableType.Tree => Localization.T("placeable.tree"),
+            PlaceableType.TreeDead => Localization.T("placeable.dead_tree"),
+            PlaceableType.FlowerOrange => Localization.T("placeable.orange_flower"),
+            PlaceableType.Bush => Localization.T("placeable.bush"),
+            PlaceableType.PlantSunFlower => Localization.T("placeable.sunflower"),
+            PlaceableType.BushDead => Localization.T("placeable.dead_bush"),
+            PlaceableType.RockWithGrass => Localization.T("placeable.rock_grass"),
+            PlaceableType.PlantFlowerRed => Localization.T("placeable.red_flower"),
+            PlaceableType.OakLog => Localization.T("placeable.oak_log"),
+            PlaceableType.Grass => Localization.T("placeable.grass"),
             _ => placeable.ToString()
         };
     }

@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using Bliss.CSharp.Logging;
 using Bliss.CSharp.Transformations;
 using Pixelis.CSharp.Entities;
@@ -124,8 +124,8 @@ public static class NetworkManager
             Client = null;
             Server = null;
             errorMessage = ex is System.Net.Sockets.SocketException
-                ? "Port 7777 ist bereits belegt. Schliesse die andere Instanz zuerst."
-                : "Server konnte nicht gestartet werden.";
+                ? Localization.T("network.error.port_in_use")
+                : Localization.T("network.error.server_start_failed");
             return false;
         }
 
@@ -150,7 +150,7 @@ public static class NetworkManager
             foreach (ushort playerId in existingPlayerIds)
             {
                 message.AddUShort(playerId);
-                message.AddString(PlayerUsernames.ContainsKey(playerId) ? PlayerUsernames[playerId] : "Player");
+                message.AddString(PlayerUsernames.ContainsKey(playerId) ? PlayerUsernames[playerId] : Localization.T("network.player.default_name"));
             }
 
             Server.Send(message, args.Client);
@@ -211,7 +211,7 @@ public static class NetworkManager
     private static void HandleClientChatMessage(Message message, ushort fromClientId)
     {
         string chatText = message.GetString();
-        string username = PlayerUsernames.TryGetValue(fromClientId, out string? name) ? name : $"Player {fromClientId}";
+        string username = PlayerUsernames.TryGetValue(fromClientId, out string? name) ? name : $"{Localization.T("network.player.default_name")} {fromClientId}";
         string fullMessage = $"{username}: {chatText}";
 
         Logger.Info($"[SERVER] Chat from {fromClientId}: {chatText}");
@@ -251,16 +251,16 @@ public static class NetworkManager
         spawnMessage.AddString(username);
         Server.SendToAll(spawnMessage, fromClientId);
 
-        BroadcastSystemChatMessage($"{username} joined the server.");
+        BroadcastSystemChatMessage(Localization.F("chat.system.player_joined", username));
         
         Logger.Info($"[SERVER] Notified all clients about new player {fromClientId} ({username})");
     }
 
     private static void HandlePlayerDeathMessage(ushort fromClientId)
     {
-        string username = PlayerUsernames.TryGetValue(fromClientId, out string? name) ? name : $"Player {fromClientId}";
+        string username = PlayerUsernames.TryGetValue(fromClientId, out string? name) ? name : $"{Localization.T("network.player.default_name")} {fromClientId}";
         Logger.Info($"[SERVER] Death notification from {fromClientId} ({username})");
-        BroadcastSystemChatMessage($"{username} died.");
+        BroadcastSystemChatMessage(Localization.F("chat.system.player_died", username));
     }
     
     // Handle level completion from a client
@@ -373,7 +373,7 @@ public static class NetworkManager
         {
             if (kvp.Key != LocalPlayerId)
             {
-                string username = PlayerUsernames.ContainsKey(kvp.Key) ? PlayerUsernames[kvp.Key] : "Player";
+                string username = PlayerUsernames.ContainsKey(kvp.Key) ? PlayerUsernames[kvp.Key] : Localization.T("network.player.default_name");
                 remotePlayersWithUsernames[kvp.Key] = username;
             }
         }
@@ -395,7 +395,7 @@ public static class NetworkManager
         Scene? nextScene = CreateNetworkScene(levelName, levelPayload);
         if (nextScene != null)
         {
-            operation = SceneManager.LoadSceneAsync(nextScene, new ProgressBarLoadingGui("Loading", "Joining Server!"));
+            operation = SceneManager.LoadSceneAsync(nextScene, new ProgressBarLoadingGui("Loading", Localization.T("gui.loading.joining_server")));
         }
         else
         {
@@ -408,7 +408,7 @@ public static class NetworkManager
             if (SceneManager.ActiveScene != null)
             {
                 // Recreate local player
-                string localUsername = PlayerUsernames.ContainsKey(LocalPlayerId) ? PlayerUsernames[LocalPlayerId] : "Player";
+                string localUsername = PlayerUsernames.ContainsKey(LocalPlayerId) ? PlayerUsernames[LocalPlayerId] : Localization.T("network.player.default_name");
                 Player localPlayer = new Player(new Transform() { Translation = new Vector3(0, -16 * 2, 0) }, true, localUsername);
                 SceneManager.ActiveScene.AddEntity(localPlayer);
                 NetworkedPlayers[LocalPlayerId] = localPlayer;
@@ -500,7 +500,7 @@ public static class NetworkManager
         Logger.Error("[CLIENT] Failed to connect to server!");
         
         // Call failure callback if set
-        _onConnectionFailed?.Invoke("Unable to reach server");
+        _onConnectionFailed?.Invoke(Localization.T("network.error.unable_to_reach_server"));
         
         // Clear callbacks after use
         _onConnectionSuccess = null;
@@ -644,7 +644,7 @@ public static class NetworkManager
         Scene? initialScene = CreateNetworkScene(levelName, levelPayload);
         if (initialScene != null)
         {
-            operation = SceneManager.LoadSceneAsync(initialScene, new ProgressBarLoadingGui("Loading", "Joining Server!"));
+            operation = SceneManager.LoadSceneAsync(initialScene, new ProgressBarLoadingGui("Loading", Localization.T("gui.loading.joining_server")));
         }
         else
         {
@@ -849,7 +849,7 @@ public static class NetworkManager
             return;
         }
 
-        ChatMessageReceived?.Invoke($"{username} died.");
+        ChatMessageReceived?.Invoke(Localization.F("chat.system.player_died", username));
     }
 
     public static void SubmitChatInput(string input)
@@ -901,7 +901,7 @@ public static class NetworkManager
             return _pendingUsername;
         }
 
-        return "Local";
+        return Localization.T("network.player.local");
     }
 
     private static void BroadcastSystemChatMessage(string message)
@@ -923,9 +923,9 @@ public static class NetworkManager
             return;
         }
 
-        string username = PlayerUsernames.TryGetValue(playerId, out string? name) ? name : $"Player {playerId}";
+        string username = PlayerUsernames.TryGetValue(playerId, out string? name) ? name : $"{Localization.T("network.player.default_name")} {playerId}";
         _announcedDisconnects.Add(playerId);
-        BroadcastSystemChatMessage($"{username} left the server.");
+        BroadcastSystemChatMessage(Localization.F("chat.system.player_left", username));
     }
 
     private static void RegisterChatCommands()
@@ -961,7 +961,7 @@ public static class NetworkManager
 
         if (!_chatCommands.TryGetValue(commandName, out ChatCommandHandler? handler))
         {
-            ChatMessageReceived?.Invoke($"Unknown command: /{commandName}");
+            ChatMessageReceived?.Invoke(Localization.F("chat.command.unknown", commandName));
             return true;
         }
 
@@ -986,6 +986,6 @@ public static class NetworkManager
             return;
         }
 
-        ChatMessageReceived?.Invoke("Only the host can execute this command.");
+        ChatMessageReceived?.Invoke(Localization.T("chat.command.host_only"));
     }
 }

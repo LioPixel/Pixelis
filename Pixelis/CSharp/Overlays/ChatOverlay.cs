@@ -445,7 +445,7 @@ public class ChatOverlay : Overlay
     {
         string inputText = this._isInputActive
             ? $"{InputPrefix}{this._inputBuffer}"
-            : "Press Enter to chat";
+            : Localization.T("overlay.chat.press_enter");
 
         return this.WrapTextWithIndices(inputText, maxWidth, fontSize);
     }
