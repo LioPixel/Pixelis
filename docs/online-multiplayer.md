@@ -92,7 +92,7 @@ sudo systemctl status pixelis-relay
 By default the client uses:
 
 ```text
-92.204.41.78:7777
+5.231.148.1:7777
 ```
 
 For another server, set this before starting the game:

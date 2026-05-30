@@ -19,7 +19,7 @@ public static class NetworkManager
 {
     private delegate void ChatCommandHandler(string[] args);
 
-    private const string DefaultOnlineServerAddress = "92.204.41.78:7777";
+    private const string DefaultOnlineServerAddress = "5.231.148.1:7777";
 
     public static Server? Server;
     public static Client? Client;
