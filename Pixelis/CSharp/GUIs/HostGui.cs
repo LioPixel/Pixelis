@@ -39,14 +39,6 @@ public class HostGui : Gui
         
         LabelData labelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.multiplayer.host"), 18);
         this.AddElement("Titel", new LabelElement(labelData, Anchor.TopCenter, new Vector2(0, 50), new Vector2(5, 5)));
-
-        TextureButtonData infoButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData infoButtonLabelData = new LabelData(ContentRegistry.Fontoe, "!", 18, hoverColor: Color.White);
-        this.AddElement("Tutorial-Info-Button", new TextureButtonElement(infoButtonData, infoButtonLabelData, Anchor.TopRight, new Vector2(-20, 20), size: new Vector2(40, 40), textOffset: new Vector2(0, 1), clickFunc: _ =>
-        {
-            SetTutorialVisible(true);
-            return true;
-        }));
         
         TextureButtonData backButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         string backText = Localization.T("common.back");
@@ -148,16 +140,16 @@ public class HostGui : Gui
         }));
 
         LabelData hostModeLabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.host.mode"), 18);
-        this.AddElement("Host-Mode-Label", new LabelElement(hostModeLabelData, Anchor.Center, new Vector2(0, -155), new Vector2(1, 1)));
-
+        this.AddElement("Host-Mode-Label", new LabelElement(hostModeLabelData, Anchor.Center, new Vector2(-210, -50), new Vector2(1, 1)));
+        
         TextureButtonData modeButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        this.AddElement("Host-Mode-Local-Button", new TextureButtonElement(modeButtonData, GuiText.ButtonLabel("", 120), Anchor.Center, new Vector2(-75, -130), size: new Vector2(120, 30), textOffset: new Vector2(0, 1), clickFunc: _ =>
+        this.AddElement("Host-Mode-Local-Button", new TextureButtonElement(modeButtonData, GuiText.ButtonLabel("", 120), Anchor.Center, new Vector2(-210, -20), size: new Vector2(120, 30), textOffset: new Vector2(0, 1), clickFunc: _ =>
         {
             SetHostMode(HostMode.Local);
             return true;
         }));
 
-        this.AddElement("Host-Mode-Online-Button", new TextureButtonElement(modeButtonData, GuiText.ButtonLabel("", 120), Anchor.Center, new Vector2(-75, -95), size: new Vector2(120, 30), textOffset: new Vector2(0, 1), clickFunc: _ =>
+        this.AddElement("Host-Mode-Online-Button", new TextureButtonElement(modeButtonData, GuiText.ButtonLabel("", 120), Anchor.Center, new Vector2(-210, 15), size: new Vector2(120, 30), textOffset: new Vector2(0, 1), clickFunc: _ =>
         {
             SetHostMode(HostMode.Online);
             return true;
@@ -167,29 +159,6 @@ public class HostGui : Gui
         LabelData errorLabelData = new LabelData(ContentRegistry.Fontoe, "", 18, color: Color.Red);
         this.AddElement("Error-Label", new LabelElement(errorLabelData, Anchor.Center, new Vector2(0, 110), new Vector2(1, 1)));
 
-        this.AddElement("Tutorial-Title", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.host.tailscale.title"), 18, color: Color.White),
-            Anchor.Center,
-            new Vector2(0, -108),
-            new Vector2(1.8F, 1.8F)));
-
-        string tailscaleTutorialText = Localization.T("gui.host.tailscale.body");
-        this.AddElement("Tutorial-Body", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, tailscaleTutorialText, 18, color: Color.LightGray),
-            Anchor.Center,
-            new Vector2(0, -8)));
-
-        TextureButtonData tutorialCloseButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        string closeText = Localization.T("common.close");
-        Vector2 closeButtonSize = GuiText.ButtonSize(closeText, 150);
-        LabelData tutorialCloseButtonLabelData = GuiText.ButtonLabel(closeText, closeButtonSize.X);
-        this.AddElement("Tutorial-Close-Button", new TextureButtonElement(tutorialCloseButtonData, tutorialCloseButtonLabelData, Anchor.Center, new Vector2(0, 112), size: closeButtonSize, textOffset: new Vector2(0, 1), clickFunc: _ =>
-        {
-            SetTutorialVisible(false);
-            return true;
-        }));
-
-        SetTutorialVisible(false);
         
         // Host button.
         TextureButtonData createButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
@@ -286,12 +255,6 @@ public class HostGui : Gui
                 slotValue.Data.Text = slideBar.Value + "";
             }
         }
-        
-        if (_isTutorialOpen && Input.IsKeyPressed(KeyboardKey.Escape))
-        {
-            SetTutorialVisible(false);
-            return;
-        }
 
         if (Input.IsKeyPressed(KeyboardKey.Escape))
         {
@@ -314,16 +277,6 @@ public class HostGui : Gui
         {
             errorLabel.Data.Text = _errorMessage;
         }
-    }
-
-    private void SetTutorialVisible(bool visible)
-    {
-        _isTutorialOpen = visible;
-        ToggleHostElements(!visible);
-        ToggleElement("Tutorial-Title", visible);
-        ToggleElement("Tutorial-Body", visible);
-        ToggleElement("Tutorial-Close-Button", visible);
-        ToggleElement("Tutorial-Info-Button", !visible);
     }
 
     private void ToggleHostElements(bool visible)
@@ -359,9 +312,6 @@ public class HostGui : Gui
     private void SetHostMode(HostMode hostMode)
     {
         _hostMode = hostMode;
-        _errorMessage = hostMode == HostMode.Online
-            ? Localization.T("gui.host.online_hint")
-            : "";
         _errorDisplayTime = hostMode == HostMode.Online ? 5f : 0f;
         RefreshHostModeButtons();
         UpdateErrorLabel();

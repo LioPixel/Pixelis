@@ -26,7 +26,6 @@
   "gui.host.mode.local": "Local",
   "gui.host.mode.online": "Online",
   "gui.host.online_connecting": "Connecting to online server {0}...",
-  "gui.host.online_hint": "Online creates a relayed room on the public Pixelis server. Share the room code from chat.",
   "gui.host.slots": "Slots",
   "gui.host.tailscale.body": "1. Install Tailscale on host + friends.\n2. Sign in with the same Tailscale account/team.\n3. Open Tailscale and connect on all devices.\n4. Host the server here in Pixelis.\n5. Share your Tailscale IPv4 (100.x.x.x).\n6. Friends Join with your IP + port.",
   "gui.host.tailscale.title": "Tailscale Tutorial",

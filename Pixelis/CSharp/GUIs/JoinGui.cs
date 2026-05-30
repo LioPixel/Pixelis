@@ -42,9 +42,6 @@ public class JoinGui : Gui
         
         LabelData labelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.multiplayer.join"), 18);
         this.AddElement("Titel", new LabelElement(labelData, Anchor.TopCenter, new Vector2(0, 50), new Vector2(5, 5)));
-
-        LabelData officialServerListTitleData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.join.official_servers"), 18, color: Color.White);
-        this.AddElement("Official-Server-List-Title", new LabelElement(officialServerListTitleData, Anchor.CenterLeft, new Vector2(27, -107), new Vector2(1.2F, 1.2F)));
         
         TextureButtonData backButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         string backText = Localization.T("common.back");
@@ -97,78 +94,7 @@ public class JoinGui : Gui
         this.AddElement("Name-Text-Box", new TextureTextBoxElement(nameTextBoxData, nameTextBoxLabelData, nameHintTextBoxLabelData, Anchor.Center, new Vector2(120, -120), 15, TextAlignment.Center, new Vector2(0, 1), Vector2.One, (12, 12), new Vector2(230, 30), rotation: 0, clickFunc: (element) => {
             return true;
         }));
-
-        TextureButtonData serverButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-
-        this.AddElement("Official-Server-1-Button", new TextureButtonElement(
-            serverButtonData,
-            GuiText.ButtonLabel("Pixelis 1", 170),
-            Anchor.CenterLeft,
-            new Vector2(40, -67),
-            size: new Vector2(170, 26),
-            textOffset: new Vector2(0, 1),
-            clickFunc: _ =>
-            {
-                ShowComingSoonMessage();
-                return true;
-            }));
-
-        this.AddElement("Official-Server-2-Button", new TextureButtonElement(
-            serverButtonData,
-            GuiText.ButtonLabel("Pixelis 2", 170),
-            Anchor.CenterLeft,
-            new Vector2(40, -35),
-            size: new Vector2(170, 26),
-            textOffset: new Vector2(0, 1),
-            clickFunc: _ =>
-            {
-                ShowComingSoonMessage();
-                return true;
-            }));
-
-        this.AddElement("Official-Server-3-Button", new TextureButtonElement(
-            serverButtonData,
-            GuiText.ButtonLabel("Pixelis 3", 170),
-            Anchor.CenterLeft,
-            new Vector2(40, -3),
-            size: new Vector2(170, 26),
-            textOffset: new Vector2(0, 1),
-            clickFunc: _ =>
-            {
-                ShowComingSoonMessage();
-                return true;
-            }));
-
-        this.AddElement("Official-Server-4-Button", new TextureButtonElement(
-            serverButtonData,
-            GuiText.ButtonLabel("Pixelis 4", 170),
-            Anchor.CenterLeft,
-            new Vector2(40, 29),
-            size: new Vector2(170, 26),
-            textOffset: new Vector2(0, 1),
-            clickFunc: _ =>
-            {
-                ShowComingSoonMessage();
-                return true;
-            }));
-
-        this.AddElement("Official-Server-5-Button", new TextureButtonElement(
-            serverButtonData,
-            GuiText.ButtonLabel("Pixelis 5", 170),
-            Anchor.CenterLeft,
-            new Vector2(40, 61),
-            size: new Vector2(170, 26),
-            textOffset: new Vector2(0, 1),
-            clickFunc: _ =>
-            {
-                ShowComingSoonMessage();
-                return true;
-            }));
-
-        LabelData officialServerHintData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.join.coming_soon"), 18, color: Color.LightGray);
-        this.AddElement("Official-Server-Hint", new LabelElement(officialServerHintData, Anchor.CenterLeft, new Vector2(50, 95), new Vector2(1, 1)));
-        RefreshOfficialServerLabels();
-        QueueServerStatusProbe();
+        
     }
     
     private void TryJoinServer()
@@ -247,22 +173,6 @@ public class JoinGui : Gui
         }
     }
 
-    private void QueueServerStatusProbe()
-    {
-        _serverStatusProbeCooldown = 5f;
-        _serverStatusProbeTask = ProbeOfficialServerStatusesAsync();
-    }
-
-    private async Task ProbeOfficialServerStatusesAsync()
-    {
-        _officialServerStatuses[0] = await ProbeServerAsync(NetworkManager.OnlineServerAddress) ? Localization.T("gui.join.server_status.on") : Localization.T("gui.join.server_status.off");
-        _officialServerStatuses[1] = Localization.T("gui.join.server_status.off");
-        _officialServerStatuses[2] = Localization.T("gui.join.server_status.off");
-        _officialServerStatuses[3] = Localization.T("gui.join.server_status.off");
-        _officialServerStatuses[4] = Localization.T("gui.join.server_status.off");
-        RefreshOfficialServerLabels();
-    }
-
     private async Task<bool> ProbeServerAsync(string endpoint)
     {
         Client? probeClient = null;
@@ -310,24 +220,6 @@ public class JoinGui : Gui
             }
         }
     }
-
-    private void RefreshOfficialServerLabels()
-    {
-        SetOfficialServerButtonLabel("Official-Server-1-Button", $"Pixelis 1 ({_officialServerStatuses[0]})");
-        SetOfficialServerButtonLabel("Official-Server-2-Button", $"Pixelis 2 ({_officialServerStatuses[1]})");
-        SetOfficialServerButtonLabel("Official-Server-3-Button", $"Pixelis 3 ({_officialServerStatuses[2]})");
-        SetOfficialServerButtonLabel("Official-Server-4-Button", $"Pixelis 4 ({_officialServerStatuses[3]})");
-        SetOfficialServerButtonLabel("Official-Server-5-Button", $"Pixelis 5 ({_officialServerStatuses[4]})");
-    }
-
-    private void SetOfficialServerButtonLabel(string elementName, string text)
-    {
-        if (this.GetElement(elementName) is TextureButtonElement button)
-        {
-            button.LabelData.Text = text;
-            button.LabelData.Size = GuiText.ButtonLabel(text, 170).Size;
-        }
-    }
     
     protected override void Update(double delta)
     {
@@ -345,10 +237,6 @@ public class JoinGui : Gui
         }
 
         _serverStatusProbeCooldown -= (float)delta;
-        if (_serverStatusProbeCooldown <= 0 && (_serverStatusProbeTask == null || _serverStatusProbeTask.IsCompleted))
-        {
-            QueueServerStatusProbe();
-        }
 
         if (Input.IsKeyPressed(KeyboardKey.Escape))
         {
@@ -380,22 +268,6 @@ public class JoinGui : Gui
         }
         
         ModalGuiRenderer.DrawModalBackground(context, framebuffer, this.ScaleFactor, ModalGuiRenderer.DefaultBaseSize);
-
-        float scale = this.ScaleFactor;
-        Vector2 panelSize = _officialServerPanelSize * scale;
-        Vector2 panelPosition = new Vector2(
-            MathF.Floor(OfficialServerPanelLeft / scale) * scale,
-            MathF.Floor(((GlobalGraphicsAssets.Window.GetHeight() / 2F) - (panelSize.Y / 2F)) / scale) * scale);
-
-        context.PrimitiveBatch.Begin(context.CommandList, framebuffer.OutputDescription);
-        context.PrimitiveBatch.DrawFilledRectangle(
-            new RectangleF(panelPosition.X, panelPosition.Y, panelSize.X, panelSize.Y),
-            color: new Color(35, 35, 35, 235));
-        context.PrimitiveBatch.DrawEmptyRectangle(
-            new RectangleF(panelPosition.X, panelPosition.Y, panelSize.X, panelSize.Y),
-            3 * scale,
-            color: Color.White);
-        context.PrimitiveBatch.End();
         
         base.Draw(context, framebuffer);
     }
