@@ -19,8 +19,20 @@ public static class NetworkManager
 {
     private delegate void ChatCommandHandler(string[] args);
 
+    private const string DefaultOnlineServerAddress = "92.204.41.78:7777";
+
     public static Server? Server;
     public static Client? Client;
+    public static string OnlineServerAddress
+    {
+        get
+        {
+            string? configuredAddress = Environment.GetEnvironmentVariable("PIXELIS_ONLINE_SERVER");
+            return string.IsNullOrWhiteSpace(configuredAddress)
+                ? DefaultOnlineServerAddress
+                : configuredAddress.Trim();
+        }
+    }
     
     // Track which player ID belongs to this client
     public static ushort LocalPlayerId;
@@ -68,6 +80,10 @@ public static class NetworkManager
     private const ushort DirectedPingRequestMessageId = 17;
     private const ushort UsernameRejectedMessageId = 18;
     private const ushort UsernameAcceptedMessageId = 19;
+    private const ushort RelayCreateRoomMessageId = 100;
+    private const ushort RelayJoinRoomMessageId = 101;
+    private const ushort RelayRoomCreatedMessageId = 102;
+    private const ushort RelayRoomJoinRejectedMessageId = 103;
     private const int MaxInlineLevelPayloadBytes = 900;
     private static readonly Dictionary<string, ChatCommandHandler> _chatCommands = new(StringComparer.OrdinalIgnoreCase);
     private static int _nextPingToken = 1;
@@ -81,6 +97,13 @@ public static class NetworkManager
     private static string _pendingInitialLevelPayload = string.Empty;
     private static Dictionary<ushort, string> _pendingInitialPlayers = new();
     private static bool _hasPendingInitialData;
+    private static bool _pendingOnlineRoomCreate;
+    private static bool _pendingOnlineRoomJoin;
+    private static ushort _pendingOnlineSlots;
+    private static string _pendingOnlineLevelName = string.Empty;
+    private static string _pendingOnlineLevelPayload = string.Empty;
+    private static string _pendingOnlineRoomCode = string.Empty;
+    private static string _lastRelayRoomCode = string.Empty;
 
     static NetworkManager()
     {
@@ -132,6 +155,35 @@ public static class NetworkManager
         Client.Connect("127.0.0.1:7777");
         Logger.Info($"[CLIENT] Host connecting to own server with username: {hostUsername}");
         return true;
+    }
+
+    public static void CreateOnlineServer(ushort slots, string levelName, string hostUsername)
+    {
+        _pendingUsername = string.IsNullOrWhiteSpace(hostUsername)
+            ? Localization.T("network.player.default_name")
+            : hostUsername.Trim();
+        _pendingOnlineRoomCreate = true;
+        _pendingOnlineRoomJoin = false;
+        _pendingOnlineSlots = slots;
+        _pendingOnlineLevelName = levelName;
+        _pendingOnlineLevelPayload = CreateLevelPayload(levelName);
+        _pendingOnlineRoomCode = string.Empty;
+
+        ConnectClientToEndpoint(OnlineServerAddress);
+        Logger.Info($"[ONLINE] Creating relayed room on {OnlineServerAddress}. Requested slots: {slots}, level: {levelName}");
+    }
+
+    public static void JoinOnlineRoom(string roomCode, string username)
+    {
+        _pendingUsername = string.IsNullOrWhiteSpace(username)
+            ? Localization.T("network.player.default_name")
+            : username.Trim();
+        _pendingOnlineRoomCreate = false;
+        _pendingOnlineRoomJoin = true;
+        _pendingOnlineRoomCode = roomCode.Trim().ToUpperInvariant();
+
+        ConnectClientToEndpoint(OnlineServerAddress);
+        Logger.Info($"[ONLINE] Joining relayed room {_pendingOnlineRoomCode} on {OnlineServerAddress}");
     }
 
     private static bool TryStartServer(ushort slots, out string errorMessage)
@@ -509,6 +561,12 @@ public static class NetworkManager
             case UsernameAcceptedMessageId: // Username accepted by server
                 HandleUsernameAccepted();
                 break;
+            case RelayRoomCreatedMessageId:
+                HandleRelayRoomCreated(e.Message);
+                break;
+            case RelayRoomJoinRejectedMessageId:
+                HandleRelayRoomJoinRejected(e.Message);
+                break;
             default:
                 Logger.Warn($"[CLIENT] Unknown message ID: {messageId}");
                 break;
@@ -620,15 +678,23 @@ public static class NetworkManager
 
     public static void JoinServer(string ip, string username)
     {
+        _pendingOnlineRoomCreate = false;
+        _pendingOnlineRoomJoin = false;
+        _pendingOnlineRoomCode = string.Empty;
+        _pendingOnlineLevelName = string.Empty;
+        _pendingOnlineLevelPayload = string.Empty;
+        _pendingUsername = username;
+        ConnectClientToEndpoint(ip);
+    }
+
+    private static void ConnectClientToEndpoint(string ip)
+    {
         Client = new Client();
         Client.Connected += OnClientConnected;
         Client.ConnectionFailed += OnClientConnectionFailed;
         Client.Disconnected += OnClientDisconnected;
         Client.MessageReceived += HandleClientMessageReceived;
-        
-        // Store the username temporarily - we'll send it after connection
-        _pendingUsername = username;
-        
+
         // Make sure to use the provided IP, not hardcoded localhost
         if (!ip.Contains(":"))
         {
@@ -650,6 +716,32 @@ public static class NetworkManager
     private static void OnClientConnected(object sender, EventArgs e)
     {
         Logger.Info("[CLIENT] Successfully connected to server!");
+
+        if (Client == null || !Client.IsConnected)
+        {
+            return;
+        }
+
+        if (_pendingOnlineRoomCreate)
+        {
+            Message createRoomMessage = Message.Create(MessageSendMode.Reliable, RelayCreateRoomMessageId);
+            createRoomMessage.AddUShort(_pendingOnlineSlots);
+            createRoomMessage.AddString(_pendingOnlineLevelName);
+            createRoomMessage.AddString(GetTransmittableLevelPayload(_pendingOnlineLevelPayload, "online room create"));
+            createRoomMessage.AddString(_pendingUsername);
+            Client.Send(createRoomMessage);
+            Logger.Info("[ONLINE] Sent relay room create request.");
+            return;
+        }
+
+        if (_pendingOnlineRoomJoin)
+        {
+            Message joinRoomMessage = Message.Create(MessageSendMode.Reliable, RelayJoinRoomMessageId);
+            joinRoomMessage.AddString(_pendingOnlineRoomCode);
+            joinRoomMessage.AddString(_pendingUsername);
+            Client.Send(joinRoomMessage);
+            Logger.Info($"[ONLINE] Sent relay room join request for {_pendingOnlineRoomCode}.");
+        }
     }
     
     private static void OnClientConnectionFailed(object sender, EventArgs e)
@@ -805,6 +897,12 @@ public static class NetworkManager
             _pendingInitialPlayers.Clear();
             _chatInputBlocked = false;
             _pendingUsername = string.Empty;
+            _pendingOnlineRoomCreate = false;
+            _pendingOnlineRoomJoin = false;
+            _pendingOnlineRoomCode = string.Empty;
+            _pendingOnlineLevelName = string.Empty;
+            _pendingOnlineLevelPayload = string.Empty;
+            _lastRelayRoomCode = string.Empty;
             ChatClearedReceived?.Invoke();
         
             Logger.Info("[NETWORK] Full cleanup completed");
@@ -889,6 +987,11 @@ public static class NetworkManager
                     NetworkedPlayers[kvp.Key] = remotePlayer;
                 
                     Logger.Info($"[CLIENT] Created remote player with ID {kvp.Key} ({kvp.Value})");
+                }
+
+                if (!string.IsNullOrWhiteSpace(_lastRelayRoomCode))
+                {
+                    ChatMessageReceived?.Invoke(Localization.F("network.relay.room_created", _lastRelayRoomCode));
                 }
             }
             else
@@ -1065,6 +1168,8 @@ public static class NetworkManager
 
     private static void HandleUsernameAccepted()
     {
+        _pendingOnlineRoomCreate = false;
+        _pendingOnlineRoomJoin = false;
         _onConnectionSuccess?.Invoke();
         _onConnectionSuccess = null;
         _onConnectionFailed = null;
@@ -1076,6 +1181,33 @@ public static class NetworkManager
             _pendingInitialLevelName = string.Empty;
             _pendingInitialLevelPayload = string.Empty;
             _pendingInitialPlayers = new Dictionary<ushort, string>();
+        }
+    }
+
+    private static void HandleRelayRoomCreated(Message message)
+    {
+        string roomCode = message.GetString();
+        _lastRelayRoomCode = roomCode;
+        ChatMessageReceived?.Invoke(Localization.F("network.relay.room_created", roomCode));
+        Logger.Info($"[ONLINE] Relay room created: {roomCode}");
+    }
+
+    private static void HandleRelayRoomJoinRejected(Message message)
+    {
+        string reason = message.GetString();
+        _pendingOnlineRoomCreate = false;
+        _pendingOnlineRoomJoin = false;
+        _pendingOnlineRoomCode = string.Empty;
+        _hasPendingInitialData = false;
+
+        _onConnectionFailed?.Invoke(reason);
+        _onConnectionSuccess = null;
+        _onConnectionFailed = null;
+
+        if (Client != null && Client.IsConnected)
+        {
+            _suppressDisconnectGuiOnce = true;
+            Client.Disconnect();
         }
     }
 

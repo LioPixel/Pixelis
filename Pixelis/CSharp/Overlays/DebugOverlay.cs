@@ -51,8 +51,8 @@ public class DebugOverlay : Overlay
         }
         
         context.SpriteBatch.Begin(context.CommandList, framebuffer.OutputDescription);
-        context.SpriteBatch.DrawText(ContentRegistry.Fontoe, $"{Localization.T("overlay.debug.fps")}: {this.GetFps()}", new Vector2(5, 5), 18, color: Color.LightGray);
-        context.SpriteBatch.DrawText(ContentRegistry.Fontoe, $"{Localization.T("overlay.debug.level_name")}: {SceneManager.ActiveScene?.Name}", new Vector2(5, 25), 18, color: Color.LightGray);
+        //context.SpriteBatch.DrawText(ContentRegistry.Fontoe, $"{Localization.T("overlay.debug.fps")}: {this.GetFps()}", new Vector2(5, 5), 18, color: Color.LightGray);
+        //context.SpriteBatch.DrawText(ContentRegistry.Fontoe, $"{Localization.T("overlay.debug.level_name")}: {SceneManager.ActiveScene?.Name}", new Vector2(5, 25), 18, color: Color.LightGray);
         context.SpriteBatch.End();
     }
 

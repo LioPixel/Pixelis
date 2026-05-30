@@ -19,9 +19,17 @@ namespace Pixelis.CSharp.GUIs;
 
 public class HostGui : Gui
 {
+    private enum HostMode
+    {
+        Local,
+        Online
+    }
+
     private string _errorMessage = "";
     private float _errorDisplayTime = 0f;
     private bool _isTutorialOpen = false;
+    private bool _isConnectingOnline = false;
+    private HostMode _hostMode = HostMode.Local;
 
     public HostGui () : base("Host", null) { }
 
@@ -139,6 +147,23 @@ public class HostGui : Gui
             return true;
         }));
 
+        LabelData hostModeLabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.host.mode"), 18);
+        this.AddElement("Host-Mode-Label", new LabelElement(hostModeLabelData, Anchor.Center, new Vector2(0, -155), new Vector2(1, 1)));
+
+        TextureButtonData modeButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        this.AddElement("Host-Mode-Local-Button", new TextureButtonElement(modeButtonData, GuiText.ButtonLabel("", 120), Anchor.Center, new Vector2(-75, -130), size: new Vector2(120, 30), textOffset: new Vector2(0, 1), clickFunc: _ =>
+        {
+            SetHostMode(HostMode.Local);
+            return true;
+        }));
+
+        this.AddElement("Host-Mode-Online-Button", new TextureButtonElement(modeButtonData, GuiText.ButtonLabel("", 120), Anchor.Center, new Vector2(-75, -95), size: new Vector2(120, 30), textOffset: new Vector2(0, 1), clickFunc: _ =>
+        {
+            SetHostMode(HostMode.Online);
+            return true;
+        }));
+        RefreshHostModeButtons();
+
         LabelData errorLabelData = new LabelData(ContentRegistry.Fontoe, "", 18, color: Color.Red);
         this.AddElement("Error-Label", new LabelElement(errorLabelData, Anchor.Center, new Vector2(0, 110), new Vector2(1, 1)));
 
@@ -172,6 +197,11 @@ public class HostGui : Gui
         
         this.AddElement("Host-Button", new TextureButtonElement(createButtonData, createButtonLabelData, Anchor.Center, new Vector2(0, 60), size: new Vector2(230, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
         {
+            if (_isConnectingOnline)
+            {
+                return true;
+            }
+
             GuiElement? slideBarElement = this.GetElement("Texture-Slider-Bar");
             
             if (slideBarElement is TextureSlideBarElement slideBar)
@@ -184,7 +214,36 @@ public class HostGui : Gui
                     username = Localization.T("network.player.default_name");
                 }
 
-                if (NetworkManager.CreateServer((ushort) slideBar.Value, dropDownElement.SelectedOption?.Text ?? "Level 1", username, out string errorMessage))
+                ushort slots = (ushort) slideBar.Value;
+                string levelName = dropDownElement.SelectedOption?.Text ?? "Level 1";
+
+                if (_hostMode == HostMode.Online)
+                {
+                    _isConnectingOnline = true;
+                    _errorMessage = Localization.F("gui.host.online_connecting", NetworkManager.OnlineServerAddress);
+                    UpdateErrorLabel();
+
+                    NetworkManager.SetConnectionCallbacks(
+                        () =>
+                        {
+                            _isConnectingOnline = false;
+                            _errorMessage = "";
+                            UpdateErrorLabel();
+                            GuiManager.SetGui(null);
+                        },
+                        reason =>
+                        {
+                            _isConnectingOnline = false;
+                            _errorMessage = Localization.F("gui.join.connection_failed", reason);
+                            _errorDisplayTime = 5f;
+                            UpdateErrorLabel();
+                        });
+
+                    NetworkManager.CreateOnlineServer(slots, levelName, username);
+                    return true;
+                }
+
+                if (NetworkManager.CreateServer(slots, levelName, username, out string errorMessage))
                 {
                     _errorMessage = "";
                     UpdateErrorLabel();
@@ -278,6 +337,9 @@ public class HostGui : Gui
         ToggleElement("Texture-Slider-Bar", visible);
         ToggleElement("Texture-Drop-Down", visible);
         ToggleElement("Name-Text-Box", visible);
+        ToggleElement("Host-Mode-Label", visible);
+        ToggleElement("Host-Mode-Local-Button", visible);
+        ToggleElement("Host-Mode-Online-Button", visible);
         ToggleElement("Error-Label", visible);
         ToggleElement("Host-Button", visible);
     }
@@ -292,6 +354,37 @@ public class HostGui : Gui
 
         element.Enabled = visible;
         element.Interactable = visible;
+    }
+
+    private void SetHostMode(HostMode hostMode)
+    {
+        _hostMode = hostMode;
+        _errorMessage = hostMode == HostMode.Online
+            ? Localization.T("gui.host.online_hint")
+            : "";
+        _errorDisplayTime = hostMode == HostMode.Online ? 5f : 0f;
+        RefreshHostModeButtons();
+        UpdateErrorLabel();
+    }
+
+    private void RefreshHostModeButtons()
+    {
+        SetButtonText("Host-Mode-Local-Button", ModeButtonText("gui.host.mode.local", _hostMode == HostMode.Local), 120);
+        SetButtonText("Host-Mode-Online-Button", ModeButtonText("gui.host.mode.online", _hostMode == HostMode.Online), 120);
+    }
+
+    private static string ModeButtonText(string key, bool selected)
+    {
+        return selected ? $"[x] {Localization.T(key)}" : $"[ ] {Localization.T(key)}";
+    }
+
+    private void SetButtonText(string elementName, string text, float width)
+    {
+        if (this.GetElement(elementName) is TextureButtonElement button)
+        {
+            button.LabelData.Text = text;
+            button.LabelData.Size = GuiText.ButtonLabel(text, width).Size;
+        }
     }
     
     

@@ -18,7 +18,6 @@ namespace Pixelis.CSharp.GUIs;
 
 public class JoinGui : Gui
 {
-    private const string OfficialServer1Address = "92.204.41.78:7777";
     private bool _isConnecting = false;
     private string _errorMessage = "";
     private float _errorDisplayTime = 0f;
@@ -110,10 +109,7 @@ public class JoinGui : Gui
             textOffset: new Vector2(0, 1),
             clickFunc: _ =>
             {
-                if (!_isConnecting)
-                {
-                    TryJoinServerWithAddress(OfficialServer1Address);
-                }
+                ShowComingSoonMessage();
                 return true;
             }));
 
@@ -198,7 +194,24 @@ public class JoinGui : Gui
         UpdateErrorLabel();
 
         NetworkManager.SetConnectionCallbacks(OnConnectionSuccess, OnConnectionFailed);
-        NetworkManager.JoinServer(ipAddress, username);
+
+        if (LooksLikeRoomCode(ipAddress))
+        {
+            NetworkManager.JoinOnlineRoom(ipAddress, username);
+        }
+        else
+        {
+            NetworkManager.JoinServer(ipAddress, username);
+        }
+    }
+
+    private static bool LooksLikeRoomCode(string value)
+    {
+        string trimmed = value.Trim();
+        return trimmed.Length is >= 4 and <= 12
+            && !trimmed.Contains('.')
+            && !trimmed.Contains(':')
+            && trimmed.All(char.IsLetterOrDigit);
     }
 
     private void ShowComingSoonMessage()
@@ -242,7 +255,7 @@ public class JoinGui : Gui
 
     private async Task ProbeOfficialServerStatusesAsync()
     {
-        _officialServerStatuses[0] = await ProbeServerAsync(OfficialServer1Address) ? Localization.T("gui.join.server_status.on") : Localization.T("gui.join.server_status.off");
+        _officialServerStatuses[0] = await ProbeServerAsync(NetworkManager.OnlineServerAddress) ? Localization.T("gui.join.server_status.on") : Localization.T("gui.join.server_status.off");
         _officialServerStatuses[1] = Localization.T("gui.join.server_status.off");
         _officialServerStatuses[2] = Localization.T("gui.join.server_status.off");
         _officialServerStatuses[3] = Localization.T("gui.join.server_status.off");
