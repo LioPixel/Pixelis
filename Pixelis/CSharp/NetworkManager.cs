@@ -1,4 +1,6 @@
 using System.Numerics;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 using System.Text;
 using Bliss.CSharp.Logging;
 using Bliss.CSharp.Transformations;
@@ -1188,8 +1190,70 @@ public static class NetworkManager
     {
         string roomCode = message.GetString();
         _lastRelayRoomCode = roomCode;
-        ChatMessageReceived?.Invoke(Localization.F("network.relay.room_created", roomCode));
+        bool copiedToClipboard = TrySetClipboard(roomCode);
+        ChatMessageReceived?.Invoke(copiedToClipboard
+            ? Localization.F("network.relay.room_created_copied", roomCode)
+            : Localization.F("network.relay.room_created", roomCode));
         Logger.Info($"[ONLINE] Relay room created: {roomCode}");
+    }
+
+    private static bool TrySetClipboard(string text)
+    {
+        if (string.IsNullOrWhiteSpace(text))
+        {
+            return false;
+        }
+
+        try
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                return TryPipeClipboardCommand("clip.exe", string.Empty, text);
+            }
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return TryPipeClipboardCommand("pbcopy", string.Empty, text);
+            }
+
+            return TryPipeClipboardCommand("wl-copy", string.Empty, text)
+                || TryPipeClipboardCommand("xclip", "-selection clipboard", text)
+                || TryPipeClipboardCommand("xsel", "--clipboard --input", text);
+        }
+        catch (Exception ex)
+        {
+            Logger.Warn($"[CLIPBOARD] Could not copy text to clipboard: {ex.Message}");
+            return false;
+        }
+    }
+
+    private static bool TryPipeClipboardCommand(string fileName, string arguments, string text)
+    {
+        try
+        {
+            using Process process = new()
+            {
+                StartInfo = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = arguments,
+                    RedirectStandardInput = true,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                }
+            };
+
+            process.Start();
+            process.StandardInput.Write(text);
+            process.StandardInput.Close();
+            return process.WaitForExit(1000) && process.ExitCode == 0;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static void HandleRelayRoomJoinRejected(Message message)
