@@ -10,6 +10,7 @@ using Pixelis.CSharp.Entities;
 using Pixelis.CSharp.GUIs;
 using Pixelis.CSharp.GUIs.Loading;
 using Pixelis.CSharp.Levels;
+using Pixelis.CSharp.Registries;
 using Sparkle.CSharp.Entities;
 using Sparkle.CSharp.Entities.Components;
 using Sparkle.CSharp.Graphics;
@@ -85,7 +86,7 @@ public class CustomLevelScene : LevelScene
     protected override void Init()
     {
         base.Init();
-        this.Background = ContentRegistry.Background2;
+        this.Background = TextureRegistry.Background2;
 
         foreach (CustomLevelBlockData block in _levelData.Blocks)
         {
@@ -815,27 +816,29 @@ public class CustomLevelScene : LevelScene
                 new Vector2((blockData.TargetX ?? blockData.X) * BlockSize, (blockData.TargetY ?? blockData.Y) * BlockSize),
                 layerDepth: layerDepth),
             PlaceableType.WinFlag => new WinFlag(new Transform { Translation = new Vector3(blockData.X * BlockSize + 7, blockData.Y * BlockSize - 16, 0) }, layerDepth),
-            PlaceableType.Tree => CreateDecorativeEntity(ContentRegistry.TreeBig, blockData.X, blockData.Y, -20.5F, layerDepth),
-            PlaceableType.TreeDead => CreateDecorativeEntity(ContentRegistry.TreeBigDead, blockData.X, blockData.Y, -11F, layerDepth),
-            PlaceableType.FlowerOrange => CreateDecorativeEntity(ContentRegistry.PlantFlower, blockData.X, blockData.Y, -8F, layerDepth),
-            PlaceableType.Bush => CreateDecorativeEntity(ContentRegistry.Bush, blockData.X, blockData.Y, 1F, layerDepth),
-            PlaceableType.PlantSunFlower => CreateDecorativeEntity(ContentRegistry.PlantSunFlower, blockData.X, blockData.Y, -8F, layerDepth),
-            PlaceableType.BushDead => CreateDecorativeEntity(ContentRegistry.BushDead, blockData.X, blockData.Y, 0F, layerDepth),
-            PlaceableType.RockWithGrass => CreateDecorativeEntity(ContentRegistry.RockGrass, blockData.X, blockData.Y, 0F, layerDepth),
-            PlaceableType.PlantFlowerRed => CreateDecorativeEntity(ContentRegistry.PlantFlowerRed, blockData.X, blockData.Y, 0F, layerDepth),
-            PlaceableType.OakLog => CreateDecorativeEntity(ContentRegistry.OakLog, blockData.X, blockData.Y, 0F, layerDepth),
-            PlaceableType.Grass => CreateDecorativeEntity(ContentRegistry.Grass, blockData.X, blockData.Y, 0F, layerDepth),
+            PlaceableType.Tree => CreateDecorativeEntity(AtlasRegistry.WorldAtlasTexture, blockData.X, blockData.Y, -20.5F, layerDepth, AtlasRegistry.TreeBigRegion),
+            PlaceableType.TreeDead => CreateDecorativeEntity(AtlasRegistry.WorldAtlasTexture, blockData.X, blockData.Y, -11F, layerDepth, AtlasRegistry.TreeBigDeadRegion),
+            PlaceableType.FlowerOrange => CreateDecorativeEntity(AtlasRegistry.WorldAtlasTexture, blockData.X, blockData.Y, -8F, layerDepth, AtlasRegistry.PlantFlowerRegion),
+            PlaceableType.Bush => CreateDecorativeEntity(AtlasRegistry.WorldAtlasTexture, blockData.X, blockData.Y, 1F, layerDepth, AtlasRegistry.BushRegion),
+            PlaceableType.PlantSunFlower => CreateDecorativeEntity(AtlasRegistry.WorldAtlasTexture, blockData.X, blockData.Y, -8F, layerDepth, AtlasRegistry.PlantSunFlowerRegion),
+            PlaceableType.BushDead => CreateDecorativeEntity(AtlasRegistry.WorldAtlasTexture, blockData.X, blockData.Y, 0F, layerDepth, AtlasRegistry.BushDeadRegion),
+            PlaceableType.RockWithGrass => CreateDecorativeEntity(AtlasRegistry.WorldAtlasTexture, blockData.X, blockData.Y, 0F, layerDepth, AtlasRegistry.RockGrassRegion),
+            PlaceableType.PlantFlowerRed => CreateDecorativeEntity(AtlasRegistry.WorldAtlasTexture, blockData.X, blockData.Y, 0F, layerDepth, AtlasRegistry.PlantFlowerRedRegion),
+            PlaceableType.OakLog => CreateDecorativeEntity(AtlasRegistry.WorldAtlasTexture, blockData.X, blockData.Y, 0F, layerDepth, AtlasRegistry.OakLogRegion),
+            PlaceableType.Grass => CreateDecorativeEntity(AtlasRegistry.WorldAtlasTexture, blockData.X, blockData.Y, 0F, layerDepth, AtlasRegistry.GrassRegion),
             _ => CreateBlockEntity(blockData.X, blockData.Y, layerDepth)
         };
     }
 
-    private static Entity CreateDecorativeEntity(Texture2D texture, int blockX, int blockY, float offsetY, float layerDepth)
+    private static Entity CreateDecorativeEntity(Texture2D texture, int blockX, int blockY, float offsetY, float layerDepth, Rectangle? sourceRect = null)
     {
         Entity entity = new(new Transform
         {
             Translation = new Vector3(blockX * BlockSize, blockY * BlockSize + offsetY, 0)
         });
-        entity.AddComponent(new Sprite(texture, Vector2.Zero, layerDepth: layerDepth));
+        entity.AddComponent(sourceRect.HasValue
+            ? CreateAtlasSprite(texture, sourceRect.Value, layerDepth)
+            : new Sprite(texture, Vector2.Zero, layerDepth: layerDepth));
         return entity;
     }
 
@@ -846,7 +849,7 @@ public class CustomLevelScene : LevelScene
             Translation = new Vector3(blockX * BlockSize, blockY * BlockSize, 0)
         });
 
-        entity.AddComponent(new Sprite(ContentRegistry.Sprite, Vector2.Zero, layerDepth: layerDepth));
+        entity.AddComponent(CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.SpriteRegion, layerDepth));
         entity.AddComponent(new RigidBody2D(
             new BodyDefinition
             {

@@ -1,5 +1,7 @@
 ﻿using System.Numerics;
 using Box2D;
+using Pixelis.CSharp.Registries;
+using Pixelis.CSharp.Scenes;
 using Sparkle.CSharp.Entities;
 using Sparkle.CSharp.Entities.Components;
 using Sparkle.CSharp.Physics.Dim2.Def;
@@ -21,7 +23,7 @@ public class WinFlag : Entity
     {
         base.Init();
         
-        this.AddComponent(new Sprite(ContentRegistry.WinFlag, Vector2.Zero, layerDepth: _layerDepth));
+        this.AddComponent(LevelScene.CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.WinFlagRegion, _layerDepth));
         
         RigidBody2D body = new RigidBody2D(new BodyDefinition()
         {

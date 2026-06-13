@@ -7,6 +7,7 @@ using Bliss.CSharp.Logging;
 using Bliss.CSharp.Textures;
 using Bliss.CSharp.Transformations;
 using Bliss.CSharp.Windowing;
+using Pixelis.CSharp.Registries;
 using Pixelis.CSharp.Scenes;
 using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
@@ -37,10 +38,10 @@ public class HostGui : Gui
     {
         base.Init();
         
-        LabelData labelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.multiplayer.host"), 18);
+        LabelData labelData = new LabelData(FontRegistry.Fontoe, Localization.T("gui.multiplayer.host"), 18);
         this.AddElement("Titel", new LabelElement(labelData, Anchor.TopCenter, new Vector2(0, 50), new Vector2(5, 5)));
         
-        TextureButtonData backButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        TextureButtonData backButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         string backText = Localization.T("common.back");
         Vector2 backButtonSize = GuiText.ButtonSize(backText, 110);
         LabelData backButtonLabelData = GuiText.ButtonLabel(backText, backButtonSize.X);
@@ -57,23 +58,25 @@ public class HostGui : Gui
             return true;
         }));
         
-        LabelData slotslabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.host.slots"), 18);
+        LabelData slotslabelData = new LabelData(FontRegistry.Fontoe, Localization.T("gui.host.slots"), 18);
         this.AddElement("slots", new LabelElement(slotslabelData, Anchor.Center, new Vector2(0, -70), new Vector2(1.5F,1.5F)));
         
-        LabelData twolabelData = new LabelData(ContentRegistry.Fontoe, "2", 18);
+        LabelData twolabelData = new LabelData(FontRegistry.Fontoe, "2", 18);
         this.AddElement("2", new LabelElement(twolabelData, Anchor.Center, new Vector2(-130, -30), new Vector2(1.5F,1.5F)));
         
-        LabelData tenlabelData = new LabelData(ContentRegistry.Fontoe, "10", 18);
+        LabelData tenlabelData = new LabelData(FontRegistry.Fontoe, "10", 18);
         this.AddElement("10", new LabelElement(tenlabelData, Anchor.Center, new Vector2(130, -30), new Vector2(1.5F,1.5F)));
         
-        LabelData slotValueData = new LabelData(ContentRegistry.Fontoe, "", 18);
+        LabelData slotValueData = new LabelData(FontRegistry.Fontoe, "", 18);
         this.AddElement("slot-value", new LabelElement(slotValueData, Anchor.Center, new Vector2(0, -30), new Vector2(1.5F,1.5F)));
         
         // Texture slider bar.
         TextureSlideBarData textureSlideBarData = new TextureSlideBarData(
-            ContentRegistry.UiBar,
+            AtlasRegistry.UiAtlasTexture,
             null,
-            ContentRegistry.UiSliderLowRes,
+            AtlasRegistry.UiAtlasTexture,
+            barSourceRect: AtlasRegistry.BarRegion,
+            sliderSourceRect: AtlasRegistry.SliderRegion,
             barResizeMode: ResizeMode.NineSlice,
             filledBarResizeMode: ResizeMode.NineSlice,
             barBorderInsets: new BorderInsets(3),
@@ -85,12 +88,16 @@ public class HostGui : Gui
         
         // Texture drop down.
         TextureDropDownData selectionDropDownData = new TextureDropDownData(
-            ContentRegistry.UiButton,
-            ContentRegistry.UiMenu,
-            ContentRegistry.UiMenu,
-            ContentRegistry.UiSlider,
-            ContentRegistry.UiArrow,
-            sliderBarSourceRect: new Rectangle(2, 0, (int) ContentRegistry.UiMenu.Width - 2, (int) ContentRegistry.UiMenu.Height),
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            fieldSourceRect: AtlasRegistry.ButtonRegion,
+            menuSourceRect: AtlasRegistry.MenuRegion,
+            sliderSourceRect: AtlasRegistry.SliderRegion,
+            arrowSourceRect: AtlasRegistry.ArrowRegion,
+            sliderBarSourceRect: new Rectangle(AtlasRegistry.ButtonRegion.X + 2, AtlasRegistry.ButtonRegion.Y, AtlasRegistry.ButtonRegion.Width - 2, AtlasRegistry.ButtonRegion.Height),
             fieldResizeMode: ResizeMode.NineSlice,
             menuResizeMode: ResizeMode.NineSlice,
             sliderBarResizeMode: ResizeMode.NineSlice,
@@ -100,7 +107,7 @@ public class HostGui : Gui
         );
         
         List<LabelData> options = LevelFactory.GetMenuLevelNames()
-            .Select(levelName => new LabelData(ContentRegistry.Fontoe, levelName, 18))
+            .Select(levelName => new LabelData(FontRegistry.Fontoe, levelName, 18))
             .ToList();
         
         TextureDropDownElement dropDownElement = new TextureDropDownElement(
@@ -114,35 +121,35 @@ public class HostGui : Gui
             fieldTextOffset: new Vector2(10, 1),
             menuTextOffset: new Vector2(10, 1),
             sliderOffset: new Vector2(-1F, 0),
-            scrollMaskInsets: (3, 3)
+            menuContentInsets: (5, 5, 3, 3)
         );
         
         dropDownElement.MenuToggled += (isMenuOpen) => {
             if (isMenuOpen) {
                 if (dropDownElement.Options.Count > dropDownElement.MaxVisibleOptions) {
-                    dropDownElement.DropDownData.MenuSourceRect = new Rectangle(0, 0, (int) ContentRegistry.UiMenu.Width - 2, (int) ContentRegistry.UiMenu.Height);
+                    dropDownElement.DropDownData.MenuSourceRect = new Rectangle(0, 0, (int) AtlasRegistry.MenuRegion.Width - 2, (int) AtlasRegistry.MenuRegion.Height);
                 } 
             }
             else {
-                dropDownElement.DropDownData.MenuSourceRect = new Rectangle(0, 0, (int) ContentRegistry.UiMenu.Width, (int) ContentRegistry.UiMenu.Height);
+                dropDownElement.DropDownData.MenuSourceRect = new Rectangle(0, 0, (int) AtlasRegistry.MenuRegion.Width, (int) AtlasRegistry.MenuRegion.Height);
             }
         };
         
         this.AddElement("Texture-Drop-Down", dropDownElement);
         
         // Texture text box.
-        TextureTextBoxData nameTextBoxData = new TextureTextBoxData(ContentRegistry.UiMenu, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12), flip: SpriteFlip.None);
-        LabelData nameTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, "", 18, hoverColor: Color.White);
-        LabelData nameHintTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.multiplayer.name_hint"), 18, color: Color.Gray);
+        TextureTextBoxData nameTextBoxData = new TextureTextBoxData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12), flip: SpriteFlip.None);
+        LabelData nameTextBoxLabelData = new LabelData(FontRegistry.Fontoe, "", 18, hoverColor: Color.White);
+        LabelData nameHintTextBoxLabelData = new LabelData(FontRegistry.Fontoe, Localization.T("gui.multiplayer.name_hint"), 18, color: Color.Gray);
         
-        this.AddElement("Name-Text-Box", new TextureTextBoxElement(nameTextBoxData, nameTextBoxLabelData, nameHintTextBoxLabelData, Anchor.Center, new Vector2(120, -120), 15, TextAlignment.Center, new Vector2(0, 1), Vector2.One, (12, 12), new Vector2(230, 30), rotation: 0, clickFunc: (element) => {
+        this.AddElement("Name-Text-Box", new TextureTextBoxElement(nameTextBoxData, nameTextBoxLabelData, nameHintTextBoxLabelData, Anchor.Center, new Vector2(120, -120), 15, TextAlignment.Center, new Vector2(0, 1), Vector2.One, 1, (12, 12), new Vector2(230, 30), rotation: 0, clickFunc: (element) => {
             return true;
         }));
 
-        LabelData hostModeLabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.host.mode"), 18);
+        LabelData hostModeLabelData = new LabelData(FontRegistry.Fontoe, Localization.T("gui.host.mode"), 18);
         this.AddElement("Host-Mode-Label", new LabelElement(hostModeLabelData, Anchor.Center, new Vector2(-210, -50), new Vector2(1, 1)));
         
-        TextureButtonData modeButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        TextureButtonData modeButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         this.AddElement("Host-Mode-Local-Button", new TextureButtonElement(modeButtonData, GuiText.ButtonLabel("", 120), Anchor.Center, new Vector2(-210, -20), size: new Vector2(120, 30), textOffset: new Vector2(0, 1), clickFunc: _ =>
         {
             SetHostMode(HostMode.Local);
@@ -156,12 +163,12 @@ public class HostGui : Gui
         }));
         RefreshHostModeButtons();
 
-        LabelData errorLabelData = new LabelData(ContentRegistry.Fontoe, "", 18, color: Color.Red);
+        LabelData errorLabelData = new LabelData(FontRegistry.Fontoe, "", 18, color: Color.Red);
         this.AddElement("Error-Label", new LabelElement(errorLabelData, Anchor.Center, new Vector2(0, 110), new Vector2(1, 1)));
 
         
         // Host button.
-        TextureButtonData createButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        TextureButtonData createButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         LabelData createButtonLabelData = GuiText.ButtonLabel(Localization.T("gui.multiplayer.host"), 230);
         
         this.AddElement("Host-Button", new TextureButtonElement(createButtonData, createButtonLabelData, Anchor.Center, new Vector2(0, 60), size: new Vector2(230, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
@@ -345,7 +352,7 @@ public class HostGui : Gui
             IWindow window = GlobalGraphicsAssets.Window;
         
             // Background
-            Texture2D backgroundTexture = ContentRegistry.Background2;
+            Texture2D backgroundTexture = TextureRegistry.Background2;
             Vector2 backgroundSize = new Vector2((float) window.GetWidth() / backgroundTexture.Width, (float) window.GetHeight() / backgroundTexture.Height);
         
             context.SpriteBatch.Begin(context.CommandList, framebuffer.OutputDescription);

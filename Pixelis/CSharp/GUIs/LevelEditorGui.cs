@@ -3,6 +3,7 @@ using Bliss.CSharp.Colors;
 using Bliss.CSharp.Interact;
 using Bliss.CSharp.Interact.Keyboards;
 using Bliss.CSharp.Transformations;
+using Pixelis.CSharp.Registries;
 using Pixelis.CSharp.Scenes;
 using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
@@ -38,24 +39,30 @@ public class LevelEditorGui : Gui
         base.Init();
 
         TextureButtonData buttonData = new TextureButtonData(
-            ContentRegistry.UiButton,
+            AtlasRegistry.UiAtlasTexture,
+            sourceRect: AtlasRegistry.ButtonRegion,
             hoverColor: Color.LightGray,
             resizeMode: ResizeMode.NineSlice,
             borderInsets: new BorderInsets(12));
 
         TextureTextBoxData textBoxData = new TextureTextBoxData(
-            ContentRegistry.UiMenu,
+            AtlasRegistry.UiAtlasTexture,
+            sourceRect: AtlasRegistry.ButtonRegion,            
             hoverColor: Color.LightGray,
             resizeMode: ResizeMode.NineSlice,
             borderInsets: new BorderInsets(12));
 
         TextureDropDownData dropDownData = new TextureDropDownData(
-            ContentRegistry.UiButton,
-            ContentRegistry.UiMenu,
-            ContentRegistry.UiMenu,
-            ContentRegistry.UiSlider,
-            ContentRegistry.UiArrow,
-            sliderBarSourceRect: new Rectangle(2, 0, (int)ContentRegistry.UiMenu.Width - 2, (int)ContentRegistry.UiMenu.Height),
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            fieldSourceRect: AtlasRegistry.ButtonRegion,
+            menuSourceRect: AtlasRegistry.MenuRegion,
+            sliderBarSourceRect: new Rectangle(AtlasRegistry.ButtonRegion.X + 2, AtlasRegistry.ButtonRegion.Y, AtlasRegistry.ButtonRegion.Width - 2, AtlasRegistry.ButtonRegion.Height),
+            sliderSourceRect: AtlasRegistry.SliderRegion,
+            arrowSourceRect: AtlasRegistry.ArrowRegion,
             fieldResizeMode: ResizeMode.NineSlice,
             menuResizeMode: ResizeMode.NineSlice,
             sliderBarResizeMode: ResizeMode.NineSlice,
@@ -93,7 +100,7 @@ public class LevelEditorGui : Gui
             }));
 
         List<LabelData> placeableOptions = CustomLevelScene.GetAvailablePlaceables()
-            .Select(placeable => new LabelData(ContentRegistry.Fontoe, CustomLevelScene.GetPlaceableDisplayName(placeable), 18))
+            .Select(placeable => new LabelData(FontRegistry.Fontoe, CustomLevelScene.GetPlaceableDisplayName(placeable), 18))
             .ToList();
 
         _placeableDropDown = new TextureDropDownElement(
@@ -106,13 +113,13 @@ public class LevelEditorGui : Gui
             fieldTextOffset: new Vector2(10, 1),
             menuTextOffset: new Vector2(10, 1),
             sliderOffset: new Vector2(-1F, 0),
-            scrollMaskInsets: (3, 3));
+            menuContentInsets: (5, 5, 3, 3));
 
         _placeableDropDown.MenuToggled += isMenuOpen =>
         {
             _placeableDropDown.DropDownData.MenuSourceRect = isMenuOpen && _placeableDropDown.Options.Count > _placeableDropDown.MaxVisibleOptions
-                ? new Rectangle(0, 0, (int)ContentRegistry.UiMenu.Width - 2, (int)ContentRegistry.UiMenu.Height)
-                : new Rectangle(0, 0, (int)ContentRegistry.UiMenu.Width, (int)ContentRegistry.UiMenu.Height);
+                ? new Rectangle(0, 0, (int)AtlasRegistry.MenuRegion.Width - 2, (int)AtlasRegistry.MenuRegion.Height)
+                : new Rectangle(0, 0, (int)AtlasRegistry.MenuRegion.Width, (int)AtlasRegistry.MenuRegion.Height);
         };
 
         _placeableDropDown.OptionChanged += option =>
@@ -137,12 +144,12 @@ public class LevelEditorGui : Gui
             fieldTextOffset: new Vector2(10, 1),
             menuTextOffset: new Vector2(10, 1),
             sliderOffset: new Vector2(-1F, 0),
-            scrollMaskInsets: (3, 3));
+            menuContentInsets: (5, 5, 3, 3));
         _movingBlockSpeedDropDown.MenuToggled += isMenuOpen =>
         {
             _movingBlockSpeedDropDown.DropDownData.MenuSourceRect = isMenuOpen && _movingBlockSpeedDropDown.Options.Count > _movingBlockSpeedDropDown.MaxVisibleOptions
-                ? new Rectangle(0, 0, (int)ContentRegistry.UiMenu.Width - 2, (int)ContentRegistry.UiMenu.Height)
-                : new Rectangle(0, 0, (int)ContentRegistry.UiMenu.Width, (int)ContentRegistry.UiMenu.Height);
+                ? new Rectangle(0, 0, (int)AtlasRegistry.MenuRegion.Width - 2, (int)AtlasRegistry.MenuRegion.Height)
+                : new Rectangle(0, 0, (int)AtlasRegistry.MenuRegion.Width, (int)AtlasRegistry.MenuRegion.Height);
         };
         _movingBlockSpeedDropDown.OptionChanged += option =>
         {
@@ -165,12 +172,12 @@ public class LevelEditorGui : Gui
             fieldTextOffset: new Vector2(10, 1),
             menuTextOffset: new Vector2(10, 1),
             sliderOffset: new Vector2(-1F, 0),
-            scrollMaskInsets: (3, 3));
+            menuContentInsets: (5, 5, 3, 3));
         _placeableDepthDropDown.MenuToggled += isMenuOpen =>
         {
             _placeableDepthDropDown.DropDownData.MenuSourceRect = isMenuOpen && _placeableDepthDropDown.Options.Count > _placeableDepthDropDown.MaxVisibleOptions
-                ? new Rectangle(0, 0, (int)ContentRegistry.UiMenu.Width - 2, (int)ContentRegistry.UiMenu.Height)
-                : new Rectangle(0, 0, (int)ContentRegistry.UiMenu.Width, (int)ContentRegistry.UiMenu.Height);
+                ? new Rectangle(0, 0, (int)AtlasRegistry.MenuRegion.Width - 2, (int)AtlasRegistry.MenuRegion.Height)
+                : new Rectangle(0, 0, (int)AtlasRegistry.MenuRegion.Width, (int)AtlasRegistry.MenuRegion.Height);
         };
         _placeableDepthDropDown.OptionChanged += option =>
         {
@@ -225,12 +232,14 @@ public class LevelEditorGui : Gui
             }));
 
         ToggleData mouseOnlyToggleData = new(
-            ContentRegistry.ToggleBackground,
-            ContentRegistry.ToggleCheckmark,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            checkboxSourceRect: AtlasRegistry.CheckBoxRegion,
+            checkmarkSourceRect: AtlasRegistry.CheckMarkRegion,
             checkboxHoverColor: Color.LightGray,
             checkmarkHoverColor: Color.LightGray);
         LabelData mouseOnlyToggleLabelData = new(
-            ContentRegistry.Fontoe,
+            FontRegistry.Fontoe,
             Localization.T("gui.level_editor.mouse_only_tools"),
             18,
             color: Color.White);
@@ -250,13 +259,13 @@ public class LevelEditorGui : Gui
             }));
 
         this.AddElement("Hotbar-Label", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.hotbar"), 18, color: Color.White),
+            new LabelData(FontRegistry.Fontoe, Localization.T("gui.level_editor.hotbar"), 18, color: Color.White),
             Anchor.BottomCenter,
             new Vector2(0, -92),
             new Vector2(1.5F, 1.5F)));
 
         _statusLabel = new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.camera_hint"), 18, color: Color.White),
+            new LabelData(FontRegistry.Fontoe, Localization.T("gui.level_editor.camera_hint"), 18, color: Color.White),
             Anchor.BottomLeft,
             new Vector2(20, -24));
         this.AddElement("Status-Label", _statusLabel);
@@ -293,14 +302,15 @@ public class LevelEditorGui : Gui
 
         _saveNameTextBox = new TextureTextBoxElement(
             textBoxData,
-            new LabelData(ContentRegistry.Fontoe, _scene.LevelName, 18, hoverColor: Color.White),
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.level_name_hint"), 18, color: Color.Gray),
+            new LabelData(FontRegistry.Fontoe, _scene.LevelName, 18, hoverColor: Color.White),
+            new LabelData(FontRegistry.Fontoe, Localization.T("gui.level_editor.level_name_hint"), 18, color: Color.Gray),
             Anchor.Center,
             new Vector2(0, -25),
             30,
             TextAlignment.Center,
             new Vector2(0, 1),
             Vector2.One,
+            1,
             (12, 12),
             new Vector2(320, 34),
             clickFunc: _ => true);
@@ -318,30 +328,30 @@ public class LevelEditorGui : Gui
             fieldTextOffset: new Vector2(10, 1),
             menuTextOffset: new Vector2(10, 1),
             sliderOffset: new Vector2(-1F, 0),
-            scrollMaskInsets: (3, 3));
+            menuContentInsets: (5, 5, 3, 3));
         _nextLevelDropDown.Enabled = false;
         _nextLevelDropDown.Interactable = false;
         _nextLevelDropDown.MenuToggled += isMenuOpen =>
         {
             _nextLevelDropDown.DropDownData.MenuSourceRect = isMenuOpen && _nextLevelDropDown.Options.Count > _nextLevelDropDown.MaxVisibleOptions
-                ? new Rectangle(0, 0, (int)ContentRegistry.UiMenu.Width - 2, (int)ContentRegistry.UiMenu.Height)
-                : new Rectangle(0, 0, (int)ContentRegistry.UiMenu.Width, (int)ContentRegistry.UiMenu.Height);
+                ? new Rectangle(0, 0, (int)AtlasRegistry.MenuRegion.Width - 2, (int)AtlasRegistry.MenuRegion.Height)
+                : new Rectangle(0, 0, (int)AtlasRegistry.MenuRegion.Width, (int)AtlasRegistry.MenuRegion.Height);
         };
         this.AddElement("Next-Level-Drop-Down", _nextLevelDropDown);
         
         this.AddElement("Save-Dialog-Title", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.save_level"), 18, color: Color.White),
+            new LabelData(FontRegistry.Fontoe, Localization.T("gui.level_editor.save_level"), 18, color: Color.White),
             Anchor.Center,
             new Vector2(0, -88),
             new Vector2(2, 2)));
 
         this.AddElement("Save-Dialog-Hint", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.save_level_hint"), 18, color: Color.LightGray),
+            new LabelData(FontRegistry.Fontoe, Localization.T("gui.level_editor.save_level_hint"), 18, color: Color.LightGray),
             Anchor.Center,
             new Vector2(0, -60)));
 
         LabelElement nextLevelLabel = new(
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.next_level"), 18, color: Color.LightGray),
+            new LabelData(FontRegistry.Fontoe, Localization.T("gui.level_editor.next_level"), 18, color: Color.LightGray),
             Anchor.Center,
             new Vector2(0, 12));
         nextLevelLabel.Enabled = false;
@@ -349,13 +359,13 @@ public class LevelEditorGui : Gui
         this.AddElement("Next-Level-Label", nextLevelLabel);
 
         this.AddElement("Escape-Menu-Title", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.escape_menu_title"), 18, color: Color.White),
+            new LabelData(FontRegistry.Fontoe, Localization.T("gui.level_editor.escape_menu_title"), 18, color: Color.White),
             Anchor.Center,
             new Vector2(0, -78),
             new Vector2(2, 2)));
 
         this.AddElement("Escape-Menu-Hint", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.escape_menu_hint"), 18, color: Color.LightGray),
+            new LabelData(FontRegistry.Fontoe, Localization.T("gui.level_editor.escape_menu_hint"), 18, color: Color.LightGray),
             Anchor.Center,
             new Vector2(0, -44)));
 
@@ -371,13 +381,13 @@ public class LevelEditorGui : Gui
         }));
 
         this.AddElement("Unsaved-Exit-Title", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.unsaved_exit_title"), 18, color: Color.White),
+            new LabelData(FontRegistry.Fontoe, Localization.T("gui.level_editor.unsaved_exit_title"), 18, color: Color.White),
             Anchor.Center,
             new Vector2(0, -84),
             new Vector2(2, 2)));
 
         this.AddElement("Unsaved-Exit-Hint", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.unsaved_exit_hint"), 18, color: Color.LightGray),
+            new LabelData(FontRegistry.Fontoe, Localization.T("gui.level_editor.unsaved_exit_hint"), 18, color: Color.LightGray),
             Anchor.Center,
             new Vector2(0, -46)));
 
@@ -670,7 +680,7 @@ public class LevelEditorGui : Gui
         float[] values = [selectedSpeed, 0.5F, 1F, 1.5F, 2F, 3F];
         return values
             .Distinct()
-            .Select(speed => new LabelData(ContentRegistry.Fontoe, $"{Localization.T("gui.level_editor.speed")} {speed:0.0}", 18))
+            .Select(speed => new LabelData(FontRegistry.Fontoe, $"{Localization.T("gui.level_editor.speed")} {speed:0.0}", 18))
             .ToList();
     }
 
@@ -688,7 +698,7 @@ public class LevelEditorGui : Gui
         float[] values = [selectedDepth, 0.1F, 0.2F, 0.3F, 0.4F, 0.5F, 0.6F, 0.7F, 0.8F, 0.9F];
         return values
             .Distinct()
-            .Select(depth => new LabelData(ContentRegistry.Fontoe, $"{Localization.T("gui.level_editor.depth")} {depth:0.0}", 18))
+            .Select(depth => new LabelData(FontRegistry.Fontoe, $"{Localization.T("gui.level_editor.depth")} {depth:0.0}", 18))
             .ToList();
     }
 
@@ -724,7 +734,7 @@ public class LevelEditorGui : Gui
         }
 
         return options
-            .Select(levelName => new LabelData(ContentRegistry.Fontoe, levelName, 18))
+            .Select(levelName => new LabelData(FontRegistry.Fontoe, levelName, 18))
             .ToList();
     }
 

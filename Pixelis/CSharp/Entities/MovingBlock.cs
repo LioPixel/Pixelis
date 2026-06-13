@@ -1,5 +1,8 @@
 ﻿using System.Numerics;
+using Bliss.CSharp.Transformations;
 using Box2D;
+using Pixelis.CSharp.Registries;
+using Pixelis.CSharp.Scenes;
 using Sparkle.CSharp.Entities;
 using Sparkle.CSharp.Entities.Components;
 using Sparkle.CSharp.Physics.Dim2.Def;
@@ -35,7 +38,7 @@ public class MovingBlock : Entity {
     protected override void Init() {
         base.Init();
         
-        this.AddComponent(new Sprite(ContentRegistry.Sprite, Vector2.Zero, layerDepth: this.LayerDepth));
+        this.AddComponent(LevelScene.CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.SpriteRegion, this.LayerDepth));
 
         this._rigidBody = new RigidBody2D(new BodyDefinition() { Type = BodyType.Kinematic },
             new PolygonShape2D(Polygon.MakeBox(8, 8), new ShapeDef() {

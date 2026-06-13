@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using Bliss.CSharp.Atlases;
 using Bliss.CSharp.Colors;
 using Bliss.CSharp.Fonts;
 using Bliss.CSharp.Interact;
@@ -8,6 +9,7 @@ using Box2D;
 using MiniAudioEx.Core.StandardAPI;
 using Pixelis.CSharp.GUIs;
 using Pixelis.CSharp.Controls;
+using Pixelis.CSharp.Registries;
 using Pixelis.CSharp.Scenes;
 using Sparkle.CSharp;
 using Sparkle.CSharp.Entities;
@@ -38,9 +40,9 @@ public class Player : Entity
     private Sprite _sprite;
     private float _timer;
     private int _frame;
-    private float _frameTime = 0.1f;
+    private AtlasAnimation _activeAnimation = null!;
+    private PlayerPoseType _activeAnimationPoseType;
     private bool _isJumping;
-    private const int TotalFrames = 8;
     private AudioSource _audioSource;
 
     private readonly HashSet<ulong> _groundContacts = new();
@@ -72,6 +74,7 @@ public class Player : Entity
     private const float BaseMaxSpeed  = 50f;
     private const float BaseGravity   = 15.5f;
     private const float BaseJumpForce = 90f;
+    private static readonly Vector2 SpriteOffset = new(0F, -2F);
 
     public Player(Transform transform, bool isLocalPlayer = true, string userName = "") : base(transform, "player")
     {
@@ -86,9 +89,17 @@ public class Player : Entity
         base.Init();
         this.PoseType = PlayerPoseType.RightIdle;
         this.NetworkedPoseType = PlayerPoseType.RightIdle;
-        this._sprite = new Sprite(ContentRegistry.PlayerIdleRight, new Vector2(168, -2), layerDepth: 1);
+        this._activeAnimationPoseType = this.PoseType;
+        this._activeAnimation = this.GetAnimationByPoseType(this.PoseType);
+        Rectangle initialFrame = this._activeAnimation.GetFrameRegion(0);
+        this._sprite = new Sprite(
+            AtlasRegistry.WorldAtlasTexture,
+            SpriteOffset,
+            sourceRect: initialFrame,
+            size: new Vector2(initialFrame.Width, initialFrame.Height),
+            layerDepth: 1);
         this.AddComponent(this._sprite);
-
+        
         RigidBody2D body = new RigidBody2D(new BodyDefinition()
         {
             Type = IsLocalPlayer ? BodyType.Dynamic : BodyType.Kinematic,
@@ -144,9 +155,9 @@ public class Player : Entity
         }
 
         this._audioSource = new AudioSource();
-        this._nameFont = ContentRegistry.Fontoe;
+        this._nameFont = FontRegistry.Fontoe;
 
-        ParticleDefinition2D footDust = new ParticleDefinition2D(ContentRegistry.Sprite) {
+        ParticleDefinition2D footDust = new ParticleDefinition2D(AtlasRegistry.WorldAtlasTexture, sourceRect: AtlasRegistry.SpriteRegion) {
             Looping = true,
             Duration = 9999.0F,
             EmissionRate = 0.0F,
@@ -186,53 +197,11 @@ public class Player : Entity
         bool isLeftWallCol = _leftContacts.Count > 0;
         bool isRightWallCol = _rightContacts.Count > 0;
 
-        _timer += (float)delta;
-
-        if (_isJumping)
-        {
-            if (_timer >= _frameTime)
-            {
-                _timer = 0;
-                _frame++;
-
-                if (_frame >= TotalFrames)
-                {
-                    _frame = 7;
-                    _timer = 0;
-
-                    if (isGround)
-                    {
-                        _timer = 0;
-                        _frame = 0;
-                        _isJumping = false;
-
-                        if (this.PoseType == PlayerPoseType.JumpLeft)
-                            this.PoseType = PlayerPoseType.LeftIdle;
-
-                        if (this.PoseType == PlayerPoseType.JumpRight)
-                            this.PoseType = PlayerPoseType.RightIdle;
-                    }
-                }
-
-                _sprite.SourceRect = new Rectangle(this._frame * 48, 0, 48, 64);
-            }
-        }
-        else
-        {
-            if (_timer >= _frameTime)
-            {
-                _timer = 0f;
-                _frame++;
-
-                if (_frame >= TotalFrames)
-                    _frame = 0;
-
-                _sprite.SourceRect = new Rectangle(this._frame * 48, 0, 48, 64);
-            }
-        }
-
         RigidBody2D body = this.GetComponent<RigidBody2D>()!;
         Vector2 velocity = body.LinearVelocity;
+
+        if (_isJumping && isGround && velocity.Y >= 0F)
+            this.LandFromJump();
 
         bool canMoveWithGui = this.Scene is CustomLevelScene customLevelScene && customLevelScene.IsPlayingFromEditor;
 
@@ -260,7 +229,6 @@ public class Player : Entity
                     input -= 1f;
                     if (!_isJumping && isGround)
                     {
-                        this._frameTime = 0.1F;
                         this.PoseType = PlayerPoseType.LeftWalk;
                         this.GetComponent<ParticleSystem2D>()?.Definition.Direction = new Vector2(1, 0.15F);
                         emitParticles = true;
@@ -272,7 +240,6 @@ public class Player : Entity
                     input += 1f;
                     if (!_isJumping && isGround)
                     {
-                        this._frameTime = 0.1F;
                         this.PoseType = PlayerPoseType.RightWalk;
                         this.GetComponent<ParticleSystem2D>()?.Definition.Direction = new Vector2(-1, 0.15F);
                         emitParticles = true;
@@ -296,13 +263,11 @@ public class Player : Entity
                     {
                         if (this.PoseType == PlayerPoseType.LeftWalk)
                         {
-                            this._frameTime = 0.2F;
                             this.PoseType = PlayerPoseType.LeftIdle;
                         }
 
                         if (this.PoseType == PlayerPoseType.RightWalk)
                         {
-                            this._frameTime = 0.2F;
                             this.PoseType = PlayerPoseType.RightIdle;
                         }
                     }
@@ -325,24 +290,18 @@ public class Player : Entity
 
                     if (this.PoseType == PlayerPoseType.LeftWalk || this.PoseType == PlayerPoseType.LeftIdle)
                     {
-                        this._frameTime = 0.1F;
-                        this._timer = 0;
-                        this._frame = 0;
                         this.PoseType = PlayerPoseType.JumpLeft;
                     }
 
                     if (this.PoseType == PlayerPoseType.RightWalk || this.PoseType == PlayerPoseType.RightIdle)
                     {
-                        this._frameTime = 0.1F;
-                        this._timer = 0;
-                        this._frame = 0;
                         this.PoseType = PlayerPoseType.JumpRight;
                     }
 
                     this._isJumping = true;
 
-                    if (((PixelisGame)Game.Instance!).OptionsConfig.GetValue<bool>("Sounds"))
-                        this._audioSource.Play(ContentRegistry.Jump);
+                    //if (((PixelisGame)Game.Instance!).OptionsConfig.GetValue<bool>("Sounds"))
+                    //    this._audioSource.Play(ContentRegistry.Jump);
                 }
             }
             else
@@ -366,7 +325,7 @@ public class Player : Entity
         }
 
         this.GameOver();
-        this.SetSpriteByPoseType();
+        this.UpdateSpriteAnimation(delta);
     }
 
     private void Respawn()
@@ -390,20 +349,7 @@ public class Player : Entity
         if (_networkDebugTimer >= 1.0f)
             _networkDebugTimer = 0;
 
-        _timer += (float)delta;
-
-        if (_timer >= _frameTime)
-        {
-            _timer = 0f;
-            _frame++;
-
-            if (_frame >= TotalFrames)
-                _frame = 0;
-
-            _sprite.SourceRect = new Rectangle(this._frame * 48, 0, 48, 64);
-        }
-
-        this.SetSpriteByPoseType();
+        this.UpdateSpriteAnimation(delta);
     }
 
     protected override void FixedUpdate(double fixedStep)
@@ -442,9 +388,9 @@ public class Player : Entity
         {
             context.SpriteBatch.Begin(context.CommandList, framebuffer.OutputDescription, view: SceneManager.ActiveCam2D?.GetView());
             Vector2 scale = new Vector2(0.25F, 0.25F);
-            Vector2 textSize = ContentRegistry.Fontoe.MeasureText(this.UserName, 18, scale);
+            Vector2 textSize = FontRegistry.Fontoe.MeasureText(this.UserName, 18, scale);
             Vector2 namePos = new Vector2(this.LocalTransform.Translation.X - textSize.X / 2.0F, this.LocalTransform.Translation.Y - 22);
-            context.SpriteBatch.DrawText(ContentRegistry.Fontoe, this.UserName, namePos, 18, scale: scale, color: Color.Gray, layerDepth:1);
+            context.SpriteBatch.DrawText(FontRegistry.Fontoe, this.UserName, namePos, 18, scale: scale, color: Color.Gray, layerDepth:1);
             context.SpriteBatch.End();
         }
     }
@@ -565,29 +511,81 @@ public class Player : Entity
             IsPlayerOnGround = _groundContacts.Count;
     }
 
-    private void SetSpriteByPoseType()
+    private void LandFromJump()
     {
-        switch (this.PoseType)
+        this._isJumping = false;
+
+        if (this.PoseType == PlayerPoseType.JumpLeft)
+            this.PoseType = PlayerPoseType.LeftIdle;
+        else if (this.PoseType == PlayerPoseType.JumpRight)
+            this.PoseType = PlayerPoseType.RightIdle;
+    }
+
+    private void UpdateSpriteAnimation(double delta)
+    {
+        AtlasAnimation animation = this.GetAnimationByPoseType(this.PoseType);
+        if (!ReferenceEquals(animation, this._activeAnimation) || this.PoseType != this._activeAnimationPoseType)
+        {
+            this._activeAnimation = animation;
+            this._activeAnimationPoseType = this.PoseType;
+            this._timer = 0F;
+            this._frame = 0;
+        }
+
+        bool shouldLoop = !this.IsJumpPose(this.PoseType);
+        this._timer += (float)delta;
+
+        if (this._activeAnimation.FrameCount <= 0)
+            return;
+
+        while (true)
+        {
+            float frameDelay = Math.Max(1, this._activeAnimation.GetFrameDelay(this._frame)) / 1000F;
+            if (this._timer < frameDelay)
+                break;
+
+            if (!shouldLoop && this._frame >= this._activeAnimation.FrameCount - 1)
+            {
+                this._timer = 0F;
+                break;
+            }
+
+            this._timer -= frameDelay;
+            this._frame++;
+
+            if (this._frame >= this._activeAnimation.FrameCount)
+                this._frame = 0;
+        }
+
+        Rectangle frameRegion = this._activeAnimation.GetFrameRegion(this._frame);
+        this._sprite.SourceRect = frameRegion;
+        this._sprite.Size = new Vector2(frameRegion.Width, frameRegion.Height);
+    }
+
+    private AtlasAnimation GetAnimationByPoseType(PlayerPoseType poseType)
+    {
+        switch (poseType)
         {
             case PlayerPoseType.LeftIdle:
-                this._sprite.Texture = ContentRegistry.PlayerIdleLeft;
-                break;
+                return AtlasRegistry.PlayerIdleLeftRegion;
             case PlayerPoseType.RightIdle:
-                this._sprite.Texture = ContentRegistry.PlayerIdleRight;
-                break;
+                return AtlasRegistry.PlayerIdleRightRegion;
             case PlayerPoseType.LeftWalk:
-                this._sprite.Texture = ContentRegistry.PlayerWalkLeft;
-                break;
+                return AtlasRegistry.PlayerWalkLeftRegion;
             case PlayerPoseType.RightWalk:
-                this._sprite.Texture = ContentRegistry.PlayerWalkRight;
-                break;
+                return AtlasRegistry.PlayerWalkRightRegion;
             case PlayerPoseType.JumpLeft:
-                this._sprite.Texture = ContentRegistry.PlayerJumpLeft;
-                break;
+                return AtlasRegistry.PlayerJumpLeftRegion;
             case PlayerPoseType.JumpRight:
-                this._sprite.Texture = ContentRegistry.PlayerJumpRight;
-                break;
+                return AtlasRegistry.PlayerJumpRightRegion;
+            default:
+                return AtlasRegistry.PlayerIdleRightRegion;
         }
+    }
+
+    private bool IsJumpPose(PlayerPoseType poseType)
+    {
+        return poseType == PlayerPoseType.JumpLeft || poseType == PlayerPoseType.JumpRight;
     }
 
     private ulong ContactKey(Shape a, Shape b)

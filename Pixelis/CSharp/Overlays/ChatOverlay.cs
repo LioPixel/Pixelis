@@ -3,6 +3,7 @@ using Bliss.CSharp.Colors;
 using Bliss.CSharp.Interact;
 using Bliss.CSharp.Interact.Keyboards;
 using Bliss.CSharp.Transformations;
+using Pixelis.CSharp.Registries;
 using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.Overlays;
@@ -201,13 +202,13 @@ public class ChatOverlay : Overlay
 
         for (int i = 0; i < visibleLines; i++)
         {
-            context.SpriteBatch.DrawText(ContentRegistry.Fontoe, historyLines[i], new Vector2(origin.X + padding, origin.Y + padding + i * lineHeight), (int)fontSize, color: ApplyAlpha(Color.LightGray, alphaFactor));
+            context.SpriteBatch.DrawText(FontRegistry.Fontoe, historyLines[i], new Vector2(origin.X + padding, origin.Y + padding + i * lineHeight), (int)fontSize, color: ApplyAlpha(Color.LightGray, alphaFactor));
         }
 
         for (int i = 0; i < inputLines.Count; i++)
         {
             context.SpriteBatch.DrawText(
-                ContentRegistry.Fontoe,
+                FontRegistry.Fontoe,
                 inputLines[i].Text,
                 new Vector2(inputTextOrigin.X, inputTextOrigin.Y + i * lineHeight),
                 (int)fontSize,
@@ -463,7 +464,7 @@ public class ChatOverlay : Overlay
         foreach (char character in text)
         {
             string nextLine = currentLine + character;
-            float nextLineWidth = ContentRegistry.Fontoe.MeasureText(nextLine, (int)fontSize, Vector2.One).X;
+            float nextLineWidth = FontRegistry.Fontoe.MeasureText(nextLine, (int)fontSize, Vector2.One).X;
 
             if (currentLine.Length > 0 && nextLineWidth > maxWidth)
             {
@@ -503,7 +504,7 @@ public class ChatOverlay : Overlay
         for (int i = 0; i < text.Length; i++)
         {
             string nextLine = currentLine + text[i];
-            float nextLineWidth = ContentRegistry.Fontoe.MeasureText(nextLine, (int)fontSize, Vector2.One).X;
+            float nextLineWidth = FontRegistry.Fontoe.MeasureText(nextLine, (int)fontSize, Vector2.One).X;
 
             if (currentLine.Length > 0 && nextLineWidth > maxWidth)
             {
@@ -602,7 +603,7 @@ public class ChatOverlay : Overlay
             return 0.0f;
         }
 
-        return ContentRegistry.Fontoe.MeasureText(text, (int)fontSize, Vector2.One).X;
+        return FontRegistry.Fontoe.MeasureText(text, (int)fontSize, Vector2.One).X;
     }
 
     private float GetAlphaFactor()

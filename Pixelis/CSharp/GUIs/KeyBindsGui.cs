@@ -4,6 +4,7 @@ using Bliss.CSharp.Interact;
 using Bliss.CSharp.Interact.Keyboards;
 using Bliss.CSharp.Textures;
 using Pixelis.CSharp.Controls;
+using Pixelis.CSharp.Registries;
 using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.GUI.Elements;
@@ -32,10 +33,10 @@ public class KeyBindsGui : Gui
     {
         base.Init();
 
-        LabelData titleData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.keybinds.title"), 18);
+        LabelData titleData = new LabelData(FontRegistry.Fontoe, Localization.T("gui.keybinds.title"), 18);
         this.AddElement("Title", new LabelElement(titleData, Anchor.TopCenter, new Vector2(0, 50), new Vector2(5, 5)));
 
-        TextureButtonData buttonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        TextureButtonData buttonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         string backText = Localization.T("common.back");
         Vector2 backButtonSize = GuiText.ButtonSize(backText, 110);
         LabelData backLabelData = GuiText.ButtonLabel(backText, backButtonSize.X);
@@ -56,9 +57,9 @@ public class KeyBindsGui : Gui
             return true;
         }));
 
-        this.AddElement("Move-Left-Button", MakeBindButton(buttonData, Localization.F(""), KeyBindinds.GetMoveLeft(), new Vector2(0, -50), BindingAction.MoveLeft));
-        this.AddElement("Move-Right-Button", MakeBindButton(buttonData, "MoveRight", KeyBindinds.GetMoveRight(), new Vector2(0, 0), BindingAction.MoveRight));
-        this.AddElement("Jump-Button", MakeBindButton(buttonData, "Jump", KeyBindinds.GetJump(), new Vector2(0, 50), BindingAction.Jump));
+        this.AddElement("Move-Left-Button", MakeBindButton(buttonData, Localization.F("gui.keybinds.move-left"), KeyBindinds.GetMoveLeft(), new Vector2(0, -50), BindingAction.MoveLeft));
+        this.AddElement("Move-Right-Button", MakeBindButton(buttonData, Localization.F("gui.keybinds.move-right"), KeyBindinds.GetMoveRight(), new Vector2(0, 0), BindingAction.MoveRight));
+        this.AddElement("Jump-Button", MakeBindButton(buttonData, Localization.F("gui.keybinds.jump"), KeyBindinds.GetJump(), new Vector2(0, 50), BindingAction.Jump));
     }
 
     protected override void Update(double delta)
@@ -98,7 +99,7 @@ public class KeyBindsGui : Gui
     {
         if (SceneManager.ActiveScene == null)
         {
-            Texture2D backgroundTexture = ContentRegistry.Background2;
+            Texture2D backgroundTexture = TextureRegistry.Background2;
             Vector2 backgroundSize = new Vector2((float)GlobalGraphicsAssets.Window.GetWidth() / backgroundTexture.Width, (float)GlobalGraphicsAssets.Window.GetHeight() / backgroundTexture.Height);
 
             context.SpriteBatch.Begin(context.CommandList, framebuffer.OutputDescription);

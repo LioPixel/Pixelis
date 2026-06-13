@@ -13,4 +13,4 @@ GameSettings settings = new GameSettings()
 };
 
 using PixelisGame game = new PixelisGame(settings);
-game.Run(null, new LogoLoadingGui("Startup", "content/sparkle/images/logo.png", logoScale: new Vector2(4, 4)));
+game.Run(null);

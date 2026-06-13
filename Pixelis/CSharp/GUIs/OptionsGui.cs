@@ -5,6 +5,7 @@ using Bliss.CSharp.Interact.Keyboards;
 using Bliss.CSharp.Textures;
 using Bliss.CSharp.Windowing;
 using MiniAudioEx.Core.StandardAPI;
+using Pixelis.CSharp.Registries;
 using Pixelis.CSharp.Scenes;
 using Sparkle.CSharp;
 using Sparkle.CSharp.Graphics;
@@ -29,10 +30,10 @@ public class OptionsGui : Gui
     {
         base.Init();
         
-        LabelData labelData = new LabelData(ContentRegistry.Fontoe, Localization.T("common.options"), 18);
+        LabelData labelData = new LabelData(FontRegistry.Fontoe, Localization.T("common.options"), 18);
         this.AddElement("Title", new LabelElement(labelData, Anchor.TopCenter, new Vector2(0, 50), new Vector2(5, 5)));
 
-        TextureButtonData backButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        TextureButtonData backButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, hoverColor: Color.LightGray, sourceRect: AtlasRegistry.ButtonRegion, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         string backText = Localization.T("common.back");
         Vector2 backButtonSize = GuiText.ButtonSize(backText, 110);
         LabelData backButtonLabelData = GuiText.ButtonLabel(backText, backButtonSize.X);
@@ -43,8 +44,8 @@ public class OptionsGui : Gui
         }));
         
         // Toggle Vsync.
-        ToggleData toggleDataVsync = new ToggleData(ContentRegistry.ToggleBackground, ContentRegistry.ToggleCheckmark, checkboxHoverColor: Color.LightGray, checkmarkHoverColor: Color.LightGray);
-        LabelData toggleLabelDataVsync = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.options.vsync"), 18);
+        ToggleData toggleDataVsync = new ToggleData(AtlasRegistry.UiAtlasTexture, AtlasRegistry.UiAtlasTexture, checkboxSourceRect: AtlasRegistry.CheckBoxRegion, checkmarkSourceRect: AtlasRegistry.CheckMarkRegion, checkboxHoverColor: Color.LightGray, checkmarkHoverColor: Color.LightGray);
+        LabelData toggleLabelDataVsync = new LabelData(FontRegistry.Fontoe, Localization.T("gui.options.vsync"), 18);
         
         this.AddElement("Toggle-Vsync", new ToggleElement(toggleDataVsync, toggleLabelDataVsync, Anchor.Center, new Vector2(-14, -120), 5, toggleState: GlobalGraphicsAssets.GraphicsDevice.SyncToVerticalBlank, clickFunc: (element) => {
             GlobalGraphicsAssets.GraphicsDevice.SyncToVerticalBlank = !GlobalGraphicsAssets.GraphicsDevice.SyncToVerticalBlank;
@@ -55,8 +56,8 @@ public class OptionsGui : Gui
         if (Localization.CurrentLanguage == Localization.German)
         {
             // Toggle Debug mode.
-            ToggleData debugModeToggleData = new ToggleData(ContentRegistry.ToggleBackground, ContentRegistry.ToggleCheckmark, checkboxHoverColor: Color.LightGray, checkmarkHoverColor: Color.LightGray);
-            LabelData debugModeToggleLabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.options.debug_mode"), 18);
+            ToggleData debugModeToggleData = new ToggleData(AtlasRegistry.UiAtlasTexture, AtlasRegistry.UiAtlasTexture, checkboxSourceRect: AtlasRegistry.CheckBoxRegion, checkmarkSourceRect: AtlasRegistry.CheckMarkRegion, checkboxHoverColor: Color.LightGray, checkmarkHoverColor: Color.LightGray);
+            LabelData debugModeToggleLabelData = new LabelData(FontRegistry.Fontoe, Localization.T("gui.options.debug_mode"), 18);
 
             this.AddElement("Toggle-DebugMode", new ToggleElement(debugModeToggleData, debugModeToggleLabelData, Anchor.Center, new Vector2(14, -70), 5, toggleState: ((PixelisGame) PixelisGame.Instance).OptionsConfig.GetValue<bool>("DebugMode"), clickFunc: (element) =>
             {
@@ -69,8 +70,8 @@ public class OptionsGui : Gui
         else if  (Localization.CurrentLanguage == Localization.English)
         {
             // Toggle Debug mode.
-            ToggleData debugModeToggleData = new ToggleData(ContentRegistry.ToggleBackground, ContentRegistry.ToggleCheckmark, checkboxHoverColor: Color.LightGray, checkmarkHoverColor: Color.LightGray);
-            LabelData debugModeToggleLabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.options.debug_mode"), 18);
+            ToggleData debugModeToggleData = new ToggleData(AtlasRegistry.UiAtlasTexture, AtlasRegistry.UiAtlasTexture, checkboxSourceRect: AtlasRegistry.CheckBoxRegion, checkmarkSourceRect: AtlasRegistry.CheckMarkRegion, checkboxHoverColor: Color.LightGray, checkmarkHoverColor: Color.LightGray);
+            LabelData debugModeToggleLabelData = new LabelData(FontRegistry.Fontoe, Localization.T("gui.options.debug_mode"), 18);
             this.AddElement("Toggle-DebugMode", new ToggleElement(debugModeToggleData, debugModeToggleLabelData, Anchor.Center, new Vector2(10, -70), 5, toggleState: ((PixelisGame) PixelisGame.Instance).OptionsConfig.GetValue<bool>("DebugMode"), clickFunc: (element) =>
             {
                 bool condition = !((PixelisGame) PixelisGame.Instance).OptionsConfig.GetValue<bool>("DebugMode");
@@ -85,25 +86,27 @@ public class OptionsGui : Gui
         }
         
         // Toggle Sound.
-        ToggleData toggleDataSound = new ToggleData(ContentRegistry.ToggleBackground, ContentRegistry.ToggleCheckmark, checkboxHoverColor: Color.LightGray, checkmarkHoverColor: Color.LightGray);
-        LabelData toggleLabelDataSound = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.options.sounds"), 18);
+        ToggleData toggleDataSound = new ToggleData(AtlasRegistry.UiAtlasTexture, AtlasRegistry.UiAtlasTexture, checkboxSourceRect: AtlasRegistry.CheckBoxRegion, checkmarkSourceRect: AtlasRegistry.CheckMarkRegion, checkboxHoverColor: Color.LightGray, checkmarkHoverColor: Color.LightGray);
+        LabelData toggleLabelDataSound = new LabelData(FontRegistry.Fontoe, Localization.T("gui.options.sounds"), 18);
         
         this.AddElement("Toggle-Sounds", new ToggleElement(toggleDataSound, toggleLabelDataSound, Anchor.Center, new Vector2(-10, -20), 5, toggleState: ((PixelisGame) Game.Instance!).OptionsConfig.GetValue<bool>("Sounds"), clickFunc: (element) => {
             ((PixelisGame) Game.Instance).OptionsConfig.SetValue("Sounds", !((PixelisGame) Game.Instance!).OptionsConfig.GetValue<bool>("Sounds"));
             return true;
         }));
         
-        LabelData masterVolumeLabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.options.master_volume"), 18);
+        LabelData masterVolumeLabelData = new LabelData(FontRegistry.Fontoe, Localization.T("gui.options.master_volume"), 18);
         this.AddElement("Master-Volume", new LabelElement(masterVolumeLabelData, Anchor.Center, new Vector2(0, 100)));
 
-        LabelData guiScaleLabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.options.gui_scale"), 18);
+        LabelData guiScaleLabelData = new LabelData(FontRegistry.Fontoe, Localization.T("gui.options.gui_scale"), 18);
         this.AddElement("Gui-Scale", new LabelElement(guiScaleLabelData, Anchor.Center, new Vector2(0, 20)));
         
         // Texture slider bar.
         TextureSlideBarData textureSlideBarData = new TextureSlideBarData(
-            ContentRegistry.UiBar,
+            AtlasRegistry.UiAtlasTexture,
             null,
-            ContentRegistry.UiSliderLowRes,
+            AtlasRegistry.UiAtlasTexture,
+            barSourceRect: AtlasRegistry.BarRegion,
+            sliderSourceRect: AtlasRegistry.SliderLowResRegion,
             barResizeMode: ResizeMode.NineSlice,
             filledBarResizeMode: ResizeMode.NineSlice,
             barBorderInsets: new BorderInsets(3),
@@ -159,7 +162,7 @@ public class OptionsGui : Gui
             IWindow window = GlobalGraphicsAssets.Window;
         
             // Background
-            Texture2D backgroundTexture = ContentRegistry.Background2;
+            Texture2D backgroundTexture = TextureRegistry.Background2;
             Vector2 backgroundSize = new Vector2((float) window.GetWidth() / backgroundTexture.Width, (float) window.GetHeight() / backgroundTexture.Height);
         
             context.SpriteBatch.Begin(context.CommandList, framebuffer.OutputDescription);
@@ -259,7 +262,7 @@ public class OptionsGui : Gui
 
         if (maxGuiScale == 0)
         {
-            LabelData singleLabelData = new LabelData(ContentRegistry.Fontoe, "Auto", 18);
+            LabelData singleLabelData = new LabelData(FontRegistry.Fontoe, "Auto", 18);
             this.AddElement("Gui-Scale-Marker-0", new LabelElement(singleLabelData, Anchor.Center, new Vector2(0, 76), new Vector2(0.75f, 0.75f)));
             return;
         }
@@ -272,7 +275,7 @@ public class OptionsGui : Gui
         {
             float x = leftX + i * step;
             string markerText = i == 0 ? "Auto" : i.ToString();
-            LabelData markerLabelData = new LabelData(ContentRegistry.Fontoe, markerText, 18);
+            LabelData markerLabelData = new LabelData(FontRegistry.Fontoe, markerText, 18);
             this.AddElement($"Gui-Scale-Marker-{i}", new LabelElement(markerLabelData, Anchor.Center, new Vector2(x, 76), new Vector2(0.75f, 0.75f)));
         }
     }

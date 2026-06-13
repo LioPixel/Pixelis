@@ -7,6 +7,7 @@ using Bliss.CSharp.Windowing;
 using Pixelis.CSharp.Entities;
 using Pixelis.CSharp.Controls;
 using Pixelis.CSharp.GUIs.Loading;
+using Pixelis.CSharp.Registries;
 using Pixelis.CSharp.Scenes;
 using Sparkle.CSharp;
 using Sparkle.CSharp.Graphics;
@@ -36,15 +37,15 @@ public class MenuGui : Gui
         GuiManager.SetScale(((PixelisGame)Game.Instance!).OptionsConfig.GetValue<int>("GuiScale"));
 
         LabelData fullscreen =
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.main_menu.fullscreen_hint"), 18, color: Color.White);
+            new LabelData(FontRegistry.Fontoe, Localization.T("gui.main_menu.fullscreen_hint"), 18, color: Color.White);
         this.AddElement("Fullscreen",
             new LabelElement(fullscreen, Anchor.BottomRight, new Vector2(0, 0), new Vector2(1.5F, 1.5F)));
         
-        LabelData haveBug = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.main_menu.havebug"), 18, color: Color.White);
+        LabelData haveBug = new LabelData(FontRegistry.Fontoe, Localization.T("gui.main_menu.havebug"), 18, color: Color.White);
         this.AddElement("HaveBug", new LabelElement(haveBug, Anchor.TopRight, new Vector2(-10, 10), new Vector2(1.2F, 1.2F)));
 
         // Options button.
-        TextureButtonData mailButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        TextureButtonData mailButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         LabelData mailButtonLabelData = GuiText.ButtonLabel(Localization.T("gui.main_menu.mail"), 230);
 
         this.AddElement("E-Mail-Button", new TextureButtonElement(mailButtonData, mailButtonLabelData, Anchor.TopRight, new Vector2(-10, 40), size: new Vector2(160, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
@@ -57,14 +58,14 @@ public class MenuGui : Gui
                 return true;
             }));
 
-        ImageData logoData = new ImageData(ContentRegistry.Logo);
+        ImageData logoData = new ImageData(TextureRegistry.Logo);
         this.AddElement("Logo", new ImageElement(logoData, Anchor.TopCenter, new Vector2(0, 50), scale: new Vector2(2,2)));
 
-        LabelData controlLabelData = new LabelData(ContentRegistry.Fontoe, this.BuildControlText(), 18, color: Color.White);
+        LabelData controlLabelData = new LabelData(FontRegistry.Fontoe, this.BuildControlText(), 18, color: Color.White);
         this.AddElement("Control-Label", new LabelElement(controlLabelData, Anchor.TopLeft, new Vector2(10, 10)));
 
         string creditsText = Localization.T("gui.main_menu.credits");
-        LabelData creditsLabelData = new LabelData(ContentRegistry.Fontoe, creditsText, 18, color: Color.White);
+        LabelData creditsLabelData = new LabelData(FontRegistry.Fontoe, creditsText, 18, color: Color.White);
         this.AddElement("Credits-Label", new LabelElement(creditsLabelData, Anchor.BottomLeft, new Vector2(10, -10)));
 
         // Button color.
@@ -74,13 +75,16 @@ public class MenuGui : Gui
 
         // Texture drop down.
         TextureDropDownData multiplayerDropDownData = new TextureDropDownData(
-            ContentRegistry.UiButton,
-            ContentRegistry.UiMenu,
-            ContentRegistry.UiMenu,
-            ContentRegistry.UiSlider,
-            ContentRegistry.UiArrow,
-            sliderBarSourceRect: new Rectangle(2, 0, (int)ContentRegistry.UiMenu.Width - 2,
-                (int)ContentRegistry.UiMenu.Height),
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            fieldSourceRect: AtlasRegistry.ButtonRegion,
+            menuSourceRect: AtlasRegistry.MenuRegion,
+            sliderBarSourceRect: new Rectangle(AtlasRegistry.ButtonRegion.X + 2, AtlasRegistry.ButtonRegion.Y, AtlasRegistry.ButtonRegion.Width - 2, AtlasRegistry.ButtonRegion.Height),
+            sliderSourceRect: AtlasRegistry.SliderRegion,
+            arrowSourceRect: AtlasRegistry.ArrowRegion,
             fieldResizeMode: ResizeMode.NineSlice,
             menuResizeMode: ResizeMode.NineSlice,
             sliderBarResizeMode: ResizeMode.NineSlice,
@@ -91,8 +95,8 @@ public class MenuGui : Gui
 
         List<LabelData> multiplayerOptions =
         [
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.multiplayer.host"), 18),
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.multiplayer.join"), 18)
+            new LabelData(FontRegistry.Fontoe, Localization.T("gui.multiplayer.host"), 18),
+            new LabelData(FontRegistry.Fontoe, Localization.T("gui.multiplayer.join"), 18)
         ];
 
         TextureDropDownElement multiplayerdropDownElement = new TextureDropDownElement(
@@ -106,7 +110,7 @@ public class MenuGui : Gui
             fieldTextOffset: new Vector2(10, 1),
             menuTextOffset: new Vector2(10, 1),
             sliderOffset: new Vector2(-1F, 0),
-            scrollMaskInsets: (3, 3)
+            menuContentInsets: (5, 5, 3, 3)
         );
 
         multiplayerdropDownElement.MenuToggled += (isMenuOpen) =>
@@ -116,13 +120,13 @@ public class MenuGui : Gui
                 if (multiplayerdropDownElement.Options.Count > multiplayerdropDownElement.MaxVisibleOptions)
                 {
                     multiplayerdropDownElement.DropDownData.MenuSourceRect = new Rectangle(0, 0,
-                        (int)ContentRegistry.UiMenu.Width - 2, (int)ContentRegistry.UiMenu.Height);
+                        (int)AtlasRegistry.MenuRegion.Width - 2, (int)AtlasRegistry.MenuRegion.Height);
                 }
             }
             else
             {
                 multiplayerdropDownElement.DropDownData.MenuSourceRect = new Rectangle(0, 0,
-                    (int)ContentRegistry.UiMenu.Width, (int)ContentRegistry.UiMenu.Height);
+                    (int)AtlasRegistry.MenuRegion.Width, (int)AtlasRegistry.MenuRegion.Height);
             }
         };
 
@@ -130,13 +134,16 @@ public class MenuGui : Gui
 
         // Texture drop down.
         TextureDropDownData selectionDropDownData = new TextureDropDownData(
-            ContentRegistry.UiButton,
-            ContentRegistry.UiMenu,
-            ContentRegistry.UiMenu,
-            ContentRegistry.UiSlider,
-            ContentRegistry.UiArrow,
-            sliderBarSourceRect: new Rectangle(2, 0, (int)ContentRegistry.UiMenu.Width - 2,
-                (int)ContentRegistry.UiMenu.Height),
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            fieldSourceRect: AtlasRegistry.ButtonRegion,
+            menuSourceRect: AtlasRegistry.MenuRegion,
+            sliderBarSourceRect: new Rectangle(AtlasRegistry.ButtonRegion.X + 2, AtlasRegistry.ButtonRegion.Y, AtlasRegistry.ButtonRegion.Width - 2, AtlasRegistry.ButtonRegion.Height),
+            sliderSourceRect: AtlasRegistry.SliderRegion,
+            arrowSourceRect: AtlasRegistry.ArrowRegion,
             fieldResizeMode: ResizeMode.NineSlice,
             menuResizeMode: ResizeMode.NineSlice,
             sliderBarResizeMode: ResizeMode.NineSlice,
@@ -146,7 +153,7 @@ public class MenuGui : Gui
         );
 
         List<LabelData> options = LevelFactory.GetMenuLevelNames()
-            .Select(levelName => new LabelData(ContentRegistry.Fontoe, levelName, 18))
+            .Select(levelName => new LabelData(FontRegistry.Fontoe, levelName, 18))
             .ToList();
 
         TextureDropDownElement dropDownElement = new TextureDropDownElement(
@@ -160,7 +167,7 @@ public class MenuGui : Gui
             fieldTextOffset: new Vector2(10, 1),
             menuTextOffset: new Vector2(10, 1),
             sliderOffset: new Vector2(-1F, 0),
-            scrollMaskInsets: (3, 3)
+            menuContentInsets: (5, 5, 3, 3)
         );
 
         dropDownElement.MenuToggled += (isMenuOpen) =>
@@ -170,20 +177,20 @@ public class MenuGui : Gui
                 if (dropDownElement.Options.Count > dropDownElement.MaxVisibleOptions)
                 {
                     dropDownElement.DropDownData.MenuSourceRect = new Rectangle(0, 0,
-                        (int)ContentRegistry.UiMenu.Width - 2, (int)ContentRegistry.UiMenu.Height);
+                        (int)AtlasRegistry.MenuRegion.Width - 2,  (int)AtlasRegistry.MenuRegion.Height);
                 }
             }
             else
             {
-                dropDownElement.DropDownData.MenuSourceRect = new Rectangle(0, 0, (int)ContentRegistry.UiMenu.Width,
-                    (int)ContentRegistry.UiMenu.Height);
+                dropDownElement.DropDownData.MenuSourceRect = new Rectangle(0, 0, (int)AtlasRegistry.MenuRegion.Width,
+                    (int)AtlasRegistry.MenuRegion.Height);
             }
         };
 
         this.AddElement("Texture-Drop-Down", dropDownElement);
 
         // Texture button.
-        TextureButtonData textureButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        TextureButtonData textureButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         LabelData textureButtonLabelData = GuiText.ButtonLabel(Localization.T("common.play"), 230);
 
         this.AddElement("Texture-Button", new TextureButtonElement(textureButtonData, textureButtonLabelData,
@@ -201,10 +208,8 @@ public class MenuGui : Gui
             }));
         
         // Options button.
-        TextureButtonData optionsButtonData = new TextureButtonData(ContentRegistry.UiButton,
-            hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData optionsButtonLabelData =
-            GuiText.ButtonLabel(Localization.T("common.options"), 230);
+        TextureButtonData optionsButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        LabelData optionsButtonLabelData = GuiText.ButtonLabel(Localization.T("common.options"), 230);
 
         this.AddElement("Options-Button", new TextureButtonElement(optionsButtonData, optionsButtonLabelData,
             Anchor.Center, new Vector2(0, 120), size: new Vector2(230, 40), textOffset: new Vector2(0, 1),
@@ -215,8 +220,7 @@ public class MenuGui : Gui
             }));
 
         // Exit button.
-        TextureButtonData exitButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray,
-            resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        TextureButtonData exitButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         LabelData exitButtonLabelData = GuiText.ButtonLabel(Localization.T("common.exit"), 230);
 
         this.AddElement("Exit-Button", new TextureButtonElement(exitButtonData, exitButtonLabelData, Anchor.Center,
@@ -227,10 +231,8 @@ public class MenuGui : Gui
             }));
 
         // Multiplayer button.
-        TextureButtonData multiplayerButtonData = new TextureButtonData(ContentRegistry.UiButton,
-            hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData multiplayerButtonLabelData =
-            GuiText.ButtonLabel(Localization.T("gui.main_menu.multiplayer"), 230);
+        TextureButtonData multiplayerButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        LabelData multiplayerButtonLabelData = GuiText.ButtonLabel(Localization.T("gui.main_menu.multiplayer"), 230);
 
         this.AddElement("Multiplayer-Button", new TextureButtonElement(multiplayerButtonData,
             multiplayerButtonLabelData, Anchor.Center, new Vector2(0, 60), size: new Vector2(230, 40),
@@ -264,7 +266,7 @@ public class MenuGui : Gui
         ((TextureButtonElement)this.GetElement("Exit-Button")!).Offset = new Vector2(0, 240);
         
         // Discord button.
-        TextureButtonData discordButtonData = new TextureButtonData(ContentRegistry.UiButton,hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        TextureButtonData discordButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion,hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         LabelData discordButtonLabelData = GuiText.ButtonLabel(Localization.T("common.discord"), 230);
         this.AddElement("Discord-Button", new TextureButtonElement(discordButtonData, discordButtonLabelData, Anchor.BottomRight, new Vector2(-10, -30), size: new Vector2(200, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
         {
@@ -292,7 +294,7 @@ public class MenuGui : Gui
         IWindow window = GlobalGraphicsAssets.Window;
 
         // Background
-        Texture2D backgroundTexture = ContentRegistry.Background2;
+        Texture2D backgroundTexture = TextureRegistry.Background2;
         Vector2 backgroundSize = new Vector2((float)window.GetWidth() / backgroundTexture.Width,
             (float)window.GetHeight() / backgroundTexture.Height);
 

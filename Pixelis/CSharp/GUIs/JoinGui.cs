@@ -5,6 +5,7 @@ using Bliss.CSharp.Interact;
 using Bliss.CSharp.Interact.Keyboards;
 using Bliss.CSharp.Textures;
 using Bliss.CSharp.Windowing;
+using Pixelis.CSharp.Registries;
 using Riptide;
 using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
@@ -39,10 +40,10 @@ public class JoinGui : Gui
     {
         base.Init();
         
-        LabelData labelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.multiplayer.join"), 18);
+        LabelData labelData = new LabelData(FontRegistry.Fontoe, Localization.T("gui.multiplayer.join"), 18);
         this.AddElement("Titel", new LabelElement(labelData, Anchor.TopCenter, new Vector2(0, 50), new Vector2(5, 5)));
         
-        TextureButtonData backButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        TextureButtonData backButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         string backText = Localization.T("common.back");
         Vector2 backButtonSize = GuiText.ButtonSize(backText, 110);
         LabelData backButtonLabelData = GuiText.ButtonLabel(backText, backButtonSize.X);
@@ -60,16 +61,16 @@ public class JoinGui : Gui
         }));
         
         // IP address text box.
-        TextureTextBoxData ipadressTextBoxData = new TextureTextBoxData(ContentRegistry.UiMenu, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12), flip: SpriteFlip.None);
-        LabelData ipadressTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, "", 18, hoverColor: Color.White);
-        LabelData ipadressHintTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.join.ip_hint"), 18, color: Color.Gray);
+        TextureTextBoxData ipadressTextBoxData = new TextureTextBoxData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.MenuRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12), flip: SpriteFlip.None);
+        LabelData ipadressTextBoxLabelData = new LabelData(FontRegistry.Fontoe, "", 18, hoverColor: Color.White);
+        LabelData ipadressHintTextBoxLabelData = new LabelData(FontRegistry.Fontoe, Localization.T("gui.join.ip_hint"), 18, color: Color.Gray);
         
-        this.AddElement("IP-Adress-Text-Box", new TextureTextBoxElement(ipadressTextBoxData, ipadressTextBoxLabelData, ipadressHintTextBoxLabelData, Anchor.Center, new Vector2(0, -10), 40, TextAlignment.Center, new Vector2(0, 1), Vector2.One, (12, 12), new Vector2(260, 30), rotation: 0, clickFunc: (element) => {
+        this.AddElement("IP-Adress-Text-Box", new TextureTextBoxElement(ipadressTextBoxData, ipadressTextBoxLabelData, ipadressHintTextBoxLabelData, Anchor.Center, new Vector2(0, -10), 40, TextAlignment.Center, new Vector2(0, 1), Vector2.One, 1, (12, 12), new Vector2(260, 30), rotation: 0, clickFunc: (element) => {
             return true;
         }));
         
         // Join button.
-        TextureButtonData createButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        TextureButtonData createButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         LabelData createButtonLabelData = GuiText.ButtonLabel(Localization.T("gui.multiplayer.join"), 230);
         
         this.AddElement("Join-Button", new TextureButtonElement(createButtonData, createButtonLabelData, Anchor.Center, new Vector2(0, 60), size: new Vector2(230, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
@@ -82,15 +83,15 @@ public class JoinGui : Gui
         }));
         
         // Error message label (initially empty)
-        LabelData errorLabelData = new LabelData(ContentRegistry.Fontoe, "", 18, color: Color.Red);
+        LabelData errorLabelData = new LabelData(FontRegistry.Fontoe, "", 18, color: Color.Red);
         this.AddElement("Error-Label", new LabelElement(errorLabelData, Anchor.Center, new Vector2(0, 110), new Vector2(1, 1)));
         
         // Username text box.
-        TextureTextBoxData nameTextBoxData = new TextureTextBoxData(ContentRegistry.UiMenu, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12), flip: SpriteFlip.None);
-        LabelData nameTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, "", 18, hoverColor: Color.White);
-        LabelData nameHintTextBoxLabelData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.multiplayer.name_hint"), 18, color: Color.Gray);
+        TextureTextBoxData nameTextBoxData = new TextureTextBoxData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.MenuRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12), flip: SpriteFlip.None);
+        LabelData nameTextBoxLabelData = new LabelData(FontRegistry.Fontoe, "", 18, hoverColor: Color.White);
+        LabelData nameHintTextBoxLabelData = new LabelData(FontRegistry.Fontoe, Localization.T("gui.multiplayer.name_hint"), 18, color: Color.Gray);
         
-        this.AddElement("Name-Text-Box", new TextureTextBoxElement(nameTextBoxData, nameTextBoxLabelData, nameHintTextBoxLabelData, Anchor.Center, new Vector2(120, -120), 15, TextAlignment.Center, new Vector2(0, 1), Vector2.One, (12, 12), new Vector2(230, 30), rotation: 0, clickFunc: (element) => {
+        this.AddElement("Name-Text-Box", new TextureTextBoxElement(nameTextBoxData, nameTextBoxLabelData, nameHintTextBoxLabelData, Anchor.Center, new Vector2(120, -120), 15, TextAlignment.Center, new Vector2(0, 1), Vector2.One, 1, (12, 12), new Vector2(230, 30), rotation: 0, clickFunc: (element) => {
             return true;
         }));
         
@@ -258,7 +259,7 @@ public class JoinGui : Gui
             IWindow window = GlobalGraphicsAssets.Window;
         
             // Background
-            Texture2D backgroundTexture = ContentRegistry.Background2;
+            Texture2D backgroundTexture = TextureRegistry.Background2;
             Vector2 backgroundSize = new Vector2((float) window.GetWidth() / backgroundTexture.Width, (float) window.GetHeight() / backgroundTexture.Height);
         
             context.SpriteBatch.Begin(context.CommandList, framebuffer.OutputDescription);

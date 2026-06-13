@@ -5,6 +5,7 @@ using Bliss.CSharp.Interact.Keyboards;
 using Bliss.CSharp.Textures;
 using Bliss.CSharp.Windowing;
 using Pixelis.CSharp.GUIs.Loading;
+using Pixelis.CSharp.Registries;
 using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.GUI.Elements;
@@ -28,11 +29,11 @@ public class HostLeavedGui : Gui
     {
         base.Init();
 
-        LabelData hostleavedData = new LabelData(ContentRegistry.Fontoe, Localization.T("gui.host_left.message"), 18, color: Color.White);
+        LabelData hostleavedData = new LabelData(FontRegistry.Fontoe, Localization.T("gui.host_left.message"), 18, color: Color.White);
         this.AddElement("host-leaved", new LabelElement(hostleavedData, Anchor.Center, new Vector2(0, -35), new Vector2(1.6F, 1.6F)));
         
         // Menu button.
-        TextureButtonData menuButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        TextureButtonData menuButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         string menuText = Localization.T("gui.host_left.back_to_main_menu");
         Vector2 menuButtonSize = GuiText.ButtonSize(menuText, 230, maxWidth: 320);
         LabelData menuButtonLabelData = GuiText.ButtonLabel(menuText, menuButtonSize.X);
@@ -67,7 +68,7 @@ public class HostLeavedGui : Gui
             IWindow window = GlobalGraphicsAssets.Window;
 
             // Background
-            Texture2D backgroundTexture = ContentRegistry.Background2;
+            Texture2D backgroundTexture = TextureRegistry.Background2;
             Vector2 backgroundSize = new Vector2((float)window.GetWidth() / backgroundTexture.Width, (float)window.GetHeight() / backgroundTexture.Height);
 
             context.SpriteBatch.Begin(context.CommandList, framebuffer.OutputDescription);

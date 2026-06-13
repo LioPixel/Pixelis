@@ -1,6 +1,7 @@
 ﻿using MiniAudioEx.Core.StandardAPI;
 using Pixelis.CSharp.GUIs;
 using Pixelis.CSharp.Overlays;
+using Pixelis.CSharp.Registries;
 using Sparkle.CSharp;
 using Sparkle.CSharp.Content;
 using Sparkle.CSharp.Graphics;
@@ -34,7 +35,10 @@ public class PixelisGame : Game
     protected override void OnRun()
     {
         base.OnRun();
-        RegistryManager.AddRegistry(new ContentRegistry());
+        RegistryManager.AddRegistry(new TextureRegistry());
+        RegistryManager.AddRegistry(new AudioRegistry());
+        RegistryManager.AddRegistry(new FontRegistry());
+        RegistryManager.AddRegistry(new AtlasRegistry());
         
         // Apply Config settings:
         GlobalGraphicsAssets.GraphicsDevice.SyncToVerticalBlank = this.OptionsConfig.GetValue<bool>("Vsync");

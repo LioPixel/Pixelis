@@ -1,5 +1,6 @@
 ﻿﻿using System.Numerics;
-using Bliss.CSharp.Camera.Dim2;
+ using Bliss.CSharp.Atlases;
+ using Bliss.CSharp.Camera.Dim2;
 using Bliss.CSharp.Colors;
 using Bliss.CSharp.Fonts;
 using Bliss.CSharp.Interact;
@@ -10,6 +11,7 @@ using Bliss.CSharp.Windowing;
 using Box2D;
 using Pixelis.CSharp.Entities;
 using Pixelis.CSharp.GUIs;
+using Pixelis.CSharp.Registries;
 using Sparkle.CSharp.Entities;
 using Sparkle.CSharp.Entities.Components;
 using Sparkle.CSharp.Graphics;
@@ -51,11 +53,11 @@ public abstract class LevelScene : Scene
         _isNetworkGame = NetworkManager.Client != null && NetworkManager.Client.IsConnected;
         
         // Load font for player name
-        _nameFont = ContentRegistry.Fontoe;
+        _nameFont = FontRegistry.Fontoe;
         
         // CAMERA
         Rectangle size = new Rectangle(0, 0, GlobalGraphicsAssets.Window.GetWidth(), GlobalGraphicsAssets.Window.GetHeight());
-        Camera2D camera2D = new Camera2D(Vector2.Zero, Vector2.Zero, size, CameraFollowMode.FollowTargetSmooth, zoom: 7);
+        Camera2D camera2D = new Camera2D(Vector2.Zero, Vector2.Zero, size, CameraFollowMode.FollowTargetSmooth, zoom: 6);
         this.AddEntity(camera2D);
 
         // PLAYER
@@ -132,13 +134,24 @@ public abstract class LevelScene : Scene
     }
     
     protected abstract void OnLevelWon();
+
+    public static Sprite CreateAtlasSprite(Texture2D texture, Rectangle sourceRect, float layerDepth, Vector2? offsetPos = null, Color? color = null)
+    {
+        return new Sprite(
+            texture,
+            offsetPos ?? Vector2.Zero,
+            sourceRect: sourceRect,
+            size: new Vector2(sourceRect.Width, sourceRect.Height),
+            layerDepth: layerDepth,
+            color: color);
+    }
     
     protected void CreatePlatform(int blockPosX, int blockPosY, int length, float layerDepth = 0.5F)
     {
         for (int i = 0; i < length; i++)
         {
             Entity element = new Entity(new Transform() { Translation = new Vector3(blockPosX * 16 + (16 * i), blockPosY * 16, 0) });
-            element.AddComponent(new Sprite(ContentRegistry.Sprite, Vector2.Zero, layerDepth: layerDepth));
+            element.AddComponent(CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.SpriteRegion, layerDepth));
             element.AddComponent(new RigidBody2D(new BodyDefinition() { Type = BodyType.Static }, new PolygonShape2D(Polygon.MakeBox(8, 8), new ShapeDef()
             {
                 EnableContactEvents = true,
@@ -172,7 +185,7 @@ public abstract class LevelScene : Scene
             }
             
             Entity element = new Entity(new Transform() { Translation = new Vector3(position, 0) });
-            element.AddComponent(new Sprite(ContentRegistry.Sprite, Vector2.Zero, layerDepth: layerDepth));
+            element.AddComponent(CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.SpriteRegion, layerDepth));
             element.AddComponent(new RigidBody2D(new BodyDefinition() { Type = BodyType.Static }, new PolygonShape2D(Polygon.MakeBox(8, 8), new ShapeDef()
             {
                 EnableContactEvents = true,
@@ -191,70 +204,70 @@ public abstract class LevelScene : Scene
     protected void CreateTree(int blockPosX, int blockPosY, float layerDepth = 0.4F)
     {
         Entity entity = new Entity(new Transform() { Translation = new Vector3(blockPosX * 16, blockPosY * 16 - 20.5F, 0) });
-        entity.AddComponent(new Sprite(ContentRegistry.TreeBig, Vector2.Zero, layerDepth: layerDepth));
+        entity.AddComponent(CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.TreeBigRegion, layerDepth));
         this.AddEntity(entity);
     }
 
     protected void CreateTreeDead(int blockPosX, int blockPosY, float layerDepth = 0.4F)
     {
         Entity entity = new Entity(new Transform() { Translation = new Vector3(blockPosX * 16, blockPosY * 16 - 11, 0) });
-        entity.AddComponent(new Sprite(ContentRegistry.TreeBigDead, Vector2.Zero, layerDepth: layerDepth));
+        entity.AddComponent(CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.TreeBigDeadRegion, layerDepth));
         this.AddEntity(entity);
     }
     
     protected void CreateFlowerOrange(int blockPosX, int blockPosY, float layerDepth = 0.4F)
     {
         Entity entity = new Entity(new Transform() { Translation = new Vector3(blockPosX * 16, blockPosY * 16 - 8, 0) });
-        entity.AddComponent(new Sprite(ContentRegistry.PlantFlower, Vector2.Zero, layerDepth: layerDepth));
+        entity.AddComponent(CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.PlantFlowerRegion, layerDepth));
         this.AddEntity(entity);
     }
     
     protected void CreateBush(int blockPosX, int blockPosY, float layerDepth = 0.4F)
     {
         Entity entity = new Entity(new Transform() { Translation = new Vector3(blockPosX * 16, blockPosY * 16 + 1, 0) });
-        entity.AddComponent(new Sprite(ContentRegistry.Bush, Vector2.Zero, layerDepth: layerDepth));
+        entity.AddComponent(CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.BushRegion, layerDepth));
         this.AddEntity(entity);
     }
     
     protected void CreateGrass(int blockPosX, int blockPosY, float layerDepth = 0.4F)
     {
         Entity entity = new Entity(new Transform() { Translation = new Vector3(blockPosX * 16, blockPosY * 16 + 1, 0) });
-        entity.AddComponent(new Sprite(ContentRegistry.Bush, Vector2.Zero, layerDepth: layerDepth));
+        entity.AddComponent(CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.GrassRegion, layerDepth));
         this.AddEntity(entity);
     }
     
     protected void CreatePlantSunFlower(int blockPosX, int blockPosY, float layerDepth = 0.4F)
     {
         Entity entity = new Entity(new Transform() { Translation = new Vector3(blockPosX * 16, blockPosY * 16 - 8, 0) });
-        entity.AddComponent(new Sprite(ContentRegistry.PlantSunFlower, Vector2.Zero, layerDepth: layerDepth));
+        entity.AddComponent(CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.PlantSunFlowerRegion, layerDepth));
         this.AddEntity(entity);
     }
     
     protected void CreateBushDead(int blockPosX, int blockPosY, float layerDepth = 0.4F)
     {
         Entity entity = new Entity(new Transform() { Translation = new Vector3(blockPosX * 16, blockPosY * 16, 0) });
-        entity.AddComponent(new Sprite(ContentRegistry.BushDead, Vector2.Zero, layerDepth: layerDepth));
+        entity.AddComponent(CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.BushDeadRegion, layerDepth));
         this.AddEntity(entity);
     }
     
     protected void CreateRockWithGrass(int blockPosX, int blockPosY, float layerDepth = 0.4F)
     {
         Entity entity = new Entity(new Transform() { Translation = new Vector3(blockPosX * 16, blockPosY * 16, 0) });
-        entity.AddComponent(new Sprite(ContentRegistry.RockGrass, Vector2.Zero, layerDepth: layerDepth));
+        entity.AddComponent(CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.RockGrassRegion, layerDepth));
         this.AddEntity(entity);
     }
     
     protected void CreatePlantFlowerRed(int blockPosX, int blockPosY, float layerDepth = 0.4F)
     {
         Entity entity = new Entity(new Transform() { Translation = new Vector3(blockPosX * 16, blockPosY * 16, 0) });
-        entity.AddComponent(new Sprite(ContentRegistry.PlantFlowerRed, Vector2.Zero, layerDepth: layerDepth));
+        entity.AddComponent(CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.PlantFlowerRedRegion, layerDepth));
         this.AddEntity(entity);
     }
     
     protected void CreateOakLog(int blockPosX, int blockPosY, float layerDepth = 0.4F)
     {
         Entity entity = new Entity(new Transform() { Translation = new Vector3(blockPosX * 16, blockPosY * 16, 0) });
-        entity.AddComponent(new Sprite(ContentRegistry.OakLog, Vector2.Zero, layerDepth: layerDepth));
+        entity.AddComponent(CreateAtlasSprite(AtlasRegistry.WorldAtlasTexture, AtlasRegistry.OakLogRegion, layerDepth));
         this.AddEntity(entity);
     }
 

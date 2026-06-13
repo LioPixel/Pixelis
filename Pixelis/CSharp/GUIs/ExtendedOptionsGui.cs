@@ -5,6 +5,7 @@ using Bliss.CSharp.Interact.Keyboards;
 using Bliss.CSharp.Textures;
 using Bliss.CSharp.Transformations;
 using Bliss.CSharp.Windowing;
+using Pixelis.CSharp.Registries;
 using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.GUI.Elements;
@@ -26,10 +27,10 @@ public class ExtandedOptionsGui : Gui
     {
         base.Init();
         
-        LabelData labelData = new LabelData(ContentRegistry.Fontoe, Localization.T("common.extended.options"), 18);
+        LabelData labelData = new LabelData(FontRegistry.Fontoe, Localization.T("common.extended.options"), 18);
         this.AddElement("Title", new LabelElement(labelData, Anchor.TopCenter, new Vector2(0, 50), new Vector2(5, 5)));
         
-        TextureButtonData backButtonData = new TextureButtonData(ContentRegistry.UiButton, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
+        TextureButtonData backButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
         string backText = Localization.T("common.back");
         Vector2 backButtonSize = GuiText.ButtonSize(backText, 110);
         LabelData backButtonLabelData = GuiText.ButtonLabel(backText, backButtonSize.X);
@@ -49,12 +50,16 @@ public class ExtandedOptionsGui : Gui
         }));
 
         TextureDropDownData languageDropDownData = new TextureDropDownData(
-            ContentRegistry.UiButton,
-            ContentRegistry.UiMenu,
-            ContentRegistry.UiMenu,
-            ContentRegistry.UiSlider,
-            ContentRegistry.UiArrow,
-            sliderBarSourceRect: new Rectangle(2, 0, (int)ContentRegistry.UiMenu.Width - 2, (int)ContentRegistry.UiMenu.Height),
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            fieldSourceRect: AtlasRegistry.ButtonRegion,
+            menuSourceRect: AtlasRegistry.MenuRegion,
+            sliderBarSourceRect: new Rectangle(AtlasRegistry.ButtonRegion.X + 2, AtlasRegistry.ButtonRegion.Y, AtlasRegistry.ButtonRegion.Width - 2, AtlasRegistry.ButtonRegion.Height),
+            sliderSourceRect: AtlasRegistry.SliderRegion,
+            arrowSourceRect: AtlasRegistry.ArrowRegion,
             fieldResizeMode: ResizeMode.NineSlice,
             menuResizeMode: ResizeMode.NineSlice,
             sliderBarResizeMode: ResizeMode.NineSlice,
@@ -74,13 +79,13 @@ public class ExtandedOptionsGui : Gui
             fieldTextOffset: new Vector2(10, 1),
             menuTextOffset: new Vector2(10, 1),
             sliderOffset: new Vector2(-1F, 0),
-            scrollMaskInsets: (3, 3));
+            menuContentInsets: (5, 5, 3, 3));
 
         languageDropDownElement.MenuToggled += isMenuOpen =>
         {
             languageDropDownElement.DropDownData.MenuSourceRect = isMenuOpen && languageDropDownElement.Options.Count > languageDropDownElement.MaxVisibleOptions
-                ? new Rectangle(0, 0, (int)ContentRegistry.UiMenu.Width - 2, (int)ContentRegistry.UiMenu.Height)
-                : new Rectangle(0, 0, (int)ContentRegistry.UiMenu.Width, (int)ContentRegistry.UiMenu.Height);
+                ? new Rectangle(AtlasRegistry.ButtonRegion.X, AtlasRegistry.ButtonRegion.Y, (int)AtlasRegistry.MenuRegion.Width - 2, (int)AtlasRegistry.MenuRegion.Height)
+                : new Rectangle(AtlasRegistry.ButtonRegion.X, AtlasRegistry.ButtonRegion.Y, (int)AtlasRegistry.MenuRegion.Width, (int)AtlasRegistry.MenuRegion.Height);
         };
 
         languageDropDownElement.OptionChanged += option =>
@@ -115,7 +120,7 @@ public class ExtandedOptionsGui : Gui
             IWindow window = GlobalGraphicsAssets.Window;
         
             // Background
-            Texture2D backgroundTexture = ContentRegistry.Background2;
+            Texture2D backgroundTexture = TextureRegistry.Background2;
             Vector2 backgroundSize = new Vector2((float) window.GetWidth() / backgroundTexture.Width, (float) window.GetHeight() / backgroundTexture.Height);
         
             context.SpriteBatch.Begin(context.CommandList, framebuffer.OutputDescription);
@@ -142,8 +147,8 @@ public class ExtandedOptionsGui : Gui
 
     private static List<LabelData> GetLanguageOptions()
     {
-        LabelData english = new LabelData(ContentRegistry.Fontoe, Localization.T("language.english"), 18);
-        LabelData german = new LabelData(ContentRegistry.Fontoe, Localization.T("language.german"), 18);
+        LabelData english = new LabelData(FontRegistry.Fontoe, Localization.T("language.english"), 18);
+        LabelData german = new LabelData(FontRegistry.Fontoe, Localization.T("language.german"), 18);
 
         return Localization.CurrentLanguage == Localization.German
             ? [german, english]

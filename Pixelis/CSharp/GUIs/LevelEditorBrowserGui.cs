@@ -5,8 +5,10 @@ using Bliss.CSharp.Interact.Keyboards;
 using Bliss.CSharp.Textures;
 using Bliss.CSharp.Transformations;
 using Bliss.CSharp.Windowing;
+using MiniAudioEx.Native;
 using Pixelis.CSharp.GUIs.Loading;
 using Pixelis.CSharp.Levels;
+using Pixelis.CSharp.Registries;
 using Pixelis.CSharp.Scenes;
 using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
@@ -34,25 +36,29 @@ public class LevelEditorBrowserGui : Gui
         base.Init();
 
         this.AddElement("Title", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_editor.title"), 18),
+            new LabelData(FontRegistry.Fontoe, Localization.T("gui.level_editor.title"), 18),
             Anchor.TopCenter,
             new Vector2(0, 70),
             new Vector2(4, 4)));
 
         TextureButtonData buttonData = new TextureButtonData(
-            ContentRegistry.UiButton,
+            AtlasRegistry.UiAtlasTexture,
+            sourceRect: AtlasRegistry.BarRegion,
             hoverColor: Color.LightGray,
             resizeMode: ResizeMode.NineSlice,
             borderInsets: new BorderInsets(12));
 
         TextureDropDownData dropDownData = new TextureDropDownData(
-            ContentRegistry.UiButton,
-            ContentRegistry.UiMenu,
-            ContentRegistry.UiMenu,
-            ContentRegistry.UiSlider,
-            ContentRegistry.UiArrow,
-            sliderBarSourceRect: new Rectangle(2, 0, (int)ContentRegistry.UiMenu.Width - 2, (int)ContentRegistry.UiMenu.Height),
-            fieldResizeMode: ResizeMode.NineSlice,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
+            fieldSourceRect: AtlasRegistry.ButtonRegion,
+            menuSourceRect: AtlasRegistry.MenuRegion,
+            sliderBarSourceRect: new Rectangle(AtlasRegistry.ButtonRegion.X + 2, AtlasRegistry.ButtonRegion.Y, AtlasRegistry.ButtonRegion.Width - 2, AtlasRegistry.ButtonRegion.Height),
+            sliderSourceRect: AtlasRegistry.SliderRegion,
+            arrowSourceRect: AtlasRegistry.ArrowRegion,            fieldResizeMode: ResizeMode.NineSlice,
             menuResizeMode: ResizeMode.NineSlice,
             sliderBarResizeMode: ResizeMode.NineSlice,
             fieldBorderInsets: new BorderInsets(12),
@@ -62,8 +68,8 @@ public class LevelEditorBrowserGui : Gui
         // Only show user-saved levels in the editor browser. Shipped levels in content/levels are read-only.
         List<string> savedLevels = CustomLevelStorage.GetSavedLevelNames();
         List<LabelData> options = savedLevels.Count > 0
-            ? savedLevels.Select(level => new LabelData(ContentRegistry.Fontoe, level, 18)).ToList()
-            : [new LabelData(ContentRegistry.Fontoe, Localization.T("gui.level_browser.no_levels_yet"), 18, color: Color.Gray)];
+            ? savedLevels.Select(level => new LabelData(FontRegistry.Fontoe, level, 18)).ToList()
+            : [new LabelData(FontRegistry.Fontoe, Localization.T("gui.level_browser.no_levels_yet"), 18, color: Color.Gray)];
 
         _savedLevelsDropDown = new TextureDropDownElement(
             dropDownData,
@@ -75,13 +81,13 @@ public class LevelEditorBrowserGui : Gui
             fieldTextOffset: new Vector2(10, 1),
             menuTextOffset: new Vector2(10, 1),
             sliderOffset: new Vector2(-1F, 0),
-            scrollMaskInsets: (3, 3));
+            menuContentInsets: (5, 5, 3, 3));
 
         _savedLevelsDropDown.MenuToggled += isMenuOpen =>
         {
             _savedLevelsDropDown.DropDownData.MenuSourceRect = isMenuOpen && _savedLevelsDropDown.Options.Count > _savedLevelsDropDown.MaxVisibleOptions
-                ? new Rectangle(0, 0, (int)ContentRegistry.UiMenu.Width - 2, (int)ContentRegistry.UiMenu.Height)
-                : new Rectangle(0, 0, (int)ContentRegistry.UiMenu.Width, (int)ContentRegistry.UiMenu.Height);
+                ? new Rectangle(0, 0, (int)AtlasRegistry.MenuRegion.Width - 2, (int)AtlasRegistry.MenuRegion.Height)
+                : new Rectangle(0, 0, (int)AtlasRegistry.MenuRegion.Width, (int)AtlasRegistry.MenuRegion.Height);
         };
 
         _openButton = new TextureButtonElement(
@@ -172,7 +178,7 @@ public class LevelEditorBrowserGui : Gui
             }));
 
         this.AddElement("Status-Label", new LabelElement(
-            new LabelData(ContentRegistry.Fontoe, _statusMessage, 18, color: Color.Red),
+            new LabelData(FontRegistry.Fontoe, _statusMessage, 18, color: Color.Red),
             Anchor.Center,
             new Vector2(0, 260)));
         
@@ -193,7 +199,7 @@ public class LevelEditorBrowserGui : Gui
     protected override void Draw(GraphicsContext context, Framebuffer framebuffer)
     {
         IWindow window = GlobalGraphicsAssets.Window;
-        Texture2D backgroundTexture = ContentRegistry.Background2;
+        Texture2D backgroundTexture = TextureRegistry.Background2;
         Vector2 backgroundSize = new(
             (float)window.GetWidth() / backgroundTexture.Width,
             (float)window.GetHeight() / backgroundTexture.Height);

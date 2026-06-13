@@ -1,6 +1,7 @@
 using System.Numerics;
 using Bliss.CSharp.Colors;
 using Bliss.CSharp.Transformations;
+using Pixelis.CSharp.Registries;
 using Pixelis.CSharp.Scenes;
 using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
@@ -24,7 +25,8 @@ public class LevelEditorPlayGui : Gui
         base.Init();
 
         TextureButtonData buttonData = new TextureButtonData(
-            ContentRegistry.UiButton,
+            AtlasRegistry.UiAtlasTexture,
+            sourceRect: AtlasRegistry.ButtonRegion,
             hoverColor: Color.LightGray,
             resizeMode: ResizeMode.NineSlice,
             borderInsets: new BorderInsets(12));

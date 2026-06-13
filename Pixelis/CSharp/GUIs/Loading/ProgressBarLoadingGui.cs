@@ -3,6 +3,7 @@ using Bliss.CSharp.Colors;
 using Bliss.CSharp.Textures;
 using Bliss.CSharp.Transformations;
 using Bliss.CSharp.Windowing;
+using Pixelis.CSharp.Registries;
 using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
 using Sparkle.CSharp.GUI.Elements;
@@ -25,13 +26,15 @@ public class ProgressBarLoadingGui : LoadingGui
     protected override void Init() {
         base.Init();
         
-        LabelData labelData = new LabelData(ContentRegistry.Fontoe, _loadingText, 18);
+        LabelData labelData = new LabelData(FontRegistry.Fontoe, _loadingText, 18);
         this.AddElement("loading_label", new LabelElement(labelData, Anchor.Center, Vector2.Zero, new Vector2(5, 5)));
         
         TextureSlideBarData textureSlideBarData = new TextureSlideBarData(
-            ContentRegistry.UiBar,
-            ContentRegistry.UiFilledBar,
+            AtlasRegistry.UiAtlasTexture,
+            AtlasRegistry.UiAtlasTexture,
             null,
+            barSourceRect: AtlasRegistry.BarRegion,
+            filledBarSourceRect: AtlasRegistry.FilledBarRegion,
             barResizeMode: ResizeMode.NineSlice,
             filledBarResizeMode: ResizeMode.NineSlice,
             barBorderInsets: new BorderInsets(3),
@@ -61,7 +64,7 @@ public class ProgressBarLoadingGui : LoadingGui
         IWindow window = GlobalGraphicsAssets.Window;
 
         // Background
-        Texture2D backgroundTexture = ContentRegistry.Background2;
+        Texture2D backgroundTexture = TextureRegistry.Background2;
         Vector2 backgroundSize = new Vector2((float)window.GetWidth() / backgroundTexture.Width,
             (float)window.GetHeight() / backgroundTexture.Height);
 
