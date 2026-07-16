@@ -6,7 +6,7 @@ using Sparkle.CSharp;
 using Sparkle.CSharp.Content;
 using Sparkle.CSharp.Graphics;
 using Sparkle.CSharp.GUI;
-using Sparkle.CSharp.IO.Configs.Json;
+using Sparkle.CSharp.IO.Json;
 using Sparkle.CSharp.Overlays;
 using Sparkle.CSharp.Registries;
 
@@ -18,18 +18,19 @@ public class PixelisGame : Game
 
     public PixelisGame(GameSettings settings) : base(settings)
     {
-        JsonConfigBuilder jsonConfigBuilder = new JsonConfigBuilder("configs", "options");
-        jsonConfigBuilder.Add("Vsync", false);
-        jsonConfigBuilder.Add("DebugMode", false);
-        jsonConfigBuilder.Add("Sounds", true);
-        jsonConfigBuilder.Add("MasterVolume", 0.5F);
-        jsonConfigBuilder.Add("GuiScale", 0);
-        jsonConfigBuilder.Add("Language", Localization.English);
-        jsonConfigBuilder.Add("Toggle-Fps", true);
-        jsonConfigBuilder.Add("KeybindMoveLeft", "A");
-        jsonConfigBuilder.Add("KeybindMoveRight", "D");
-        jsonConfigBuilder.Add("KeybindJump", "Space");
-        this.OptionsConfig = jsonConfigBuilder.Build();
+        this.OptionsConfig = new JsonConfig("options", "configs", new Dictionary<string, object>()
+        {
+            { "Vsync", false },
+            { "DebugMode", false },
+            { "Sounds", true },
+            { "MasterVolume", 0.5 },
+            { "GuiScale", 0 },
+            { "Language", Localization.English },
+            { "Toggle-Fps", true },
+            { "KeybindMoveLeft", "A" },
+            { "KeybindMoveRight", "D" },
+            { "KeybindJump", "Space" },
+        });
     }
 
     protected override void OnRun()
@@ -50,6 +51,7 @@ public class PixelisGame : Game
     protected override void Init()
     {
         base.Init();
+        
         GuiManager.SetGui(new MenuGui());
         OverlayManager.AddOverlay(new DebugOverlay("Debug", true));
         OverlayManager.AddOverlay(new ChatOverlay("Chat", true));

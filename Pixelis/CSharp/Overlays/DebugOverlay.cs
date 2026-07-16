@@ -92,4 +92,6 @@ public class DebugOverlay : Overlay
         
         return this._fps;
     }
+
+    protected override void Dispose(bool disposing) {}
 }

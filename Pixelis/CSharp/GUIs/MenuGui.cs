@@ -36,28 +36,6 @@ public class MenuGui : Gui
 
         GuiManager.SetScale(((PixelisGame)Game.Instance!).OptionsConfig.GetValue<int>("GuiScale"));
 
-        LabelData fullscreen =
-            new LabelData(FontRegistry.Fontoe, Localization.T("gui.main_menu.fullscreen_hint"), 18, color: Color.White);
-        this.AddElement("Fullscreen",
-            new LabelElement(fullscreen, Anchor.BottomRight, new Vector2(0, 0), new Vector2(1.5F, 1.5F)));
-        
-        LabelData haveBug = new LabelData(FontRegistry.Fontoe, Localization.T("gui.main_menu.havebug"), 18, color: Color.White);
-        this.AddElement("HaveBug", new LabelElement(haveBug, Anchor.TopRight, new Vector2(-10, 10), new Vector2(1.2F, 1.2F)));
-
-        // Options button.
-        TextureButtonData mailButtonData = new TextureButtonData(AtlasRegistry.UiAtlasTexture, sourceRect: AtlasRegistry.ButtonRegion, hoverColor: Color.LightGray, resizeMode: ResizeMode.NineSlice, borderInsets: new BorderInsets(12));
-        LabelData mailButtonLabelData = GuiText.ButtonLabel(Localization.T("gui.main_menu.mail"), 230);
-
-        this.AddElement("E-Mail-Button", new TextureButtonElement(mailButtonData, mailButtonLabelData, Anchor.TopRight, new Vector2(-10, 40), size: new Vector2(160, 40), textOffset: new Vector2(0, 1), clickFunc: (element) =>
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "mailto:kontakt@pixelis.net",
-                    UseShellExecute = true
-                });
-                return true;
-            }));
-
         ImageData logoData = new ImageData(TextureRegistry.Logo);
         this.AddElement("Logo", new ImageElement(logoData, Anchor.TopCenter, new Vector2(0, 50), scale: new Vector2(2,2)));
 
@@ -67,11 +45,6 @@ public class MenuGui : Gui
         string creditsText = Localization.T("gui.main_menu.credits");
         LabelData creditsLabelData = new LabelData(FontRegistry.Fontoe, creditsText, 18, color: Color.White);
         this.AddElement("Credits-Label", new LabelElement(creditsLabelData, Anchor.BottomLeft, new Vector2(10, -10)));
-
-        // Button color.
-        Color lightPurpleColor = new Color(147, 112, 219, 180);
-        Color purpleColor = new Color(128, 0, 128, 180);
-        Color darkPurpleColor = new Color(75, 0, 130, 180);
 
         // Texture drop down.
         TextureDropDownData multiplayerDropDownData = new TextureDropDownData(
@@ -272,7 +245,7 @@ public class MenuGui : Gui
         {
             Process.Start(new ProcessStartInfo
             {
-                FileName = "https://discord.gg/rK8jCuYpqn",
+                FileName = "https://discord.gg/Q9prw3Smzb",
                 UseShellExecute = true,
             });
                 return true;

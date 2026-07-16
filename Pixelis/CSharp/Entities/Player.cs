@@ -3,6 +3,7 @@ using Bliss.CSharp.Atlases;
 using Bliss.CSharp.Colors;
 using Bliss.CSharp.Fonts;
 using Bliss.CSharp.Interact;
+using Bliss.CSharp.Interact.Gamepads;
 using Bliss.CSharp.Interact.Keyboards;
 using Bliss.CSharp.Transformations;
 using Box2D;

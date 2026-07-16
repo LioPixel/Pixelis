@@ -626,4 +626,6 @@ public class ChatOverlay : Overlay
     {
         return new Color(color.R, color.G, color.B, (byte)Math.Clamp((int)(color.A * alphaFactor), 0, 255));
     }
+
+    protected override void Dispose(bool disposing) {}
 }
